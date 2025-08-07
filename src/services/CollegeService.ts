@@ -1,4 +1,4 @@
-import { useGet, usePost } from '@/axios'
+import { useGet, usePost, usePut } from '@/axios'
 import { useCategoriesMajorsItemsStore } from '@/stores/CategoriesMajorsItemsStore'
 import { useStudentScoreitemsStore } from '@/stores/StudentScoreItemsStore'
 import type {
@@ -7,10 +7,12 @@ import type {
   ComfirmWeightedScoreReq,
   Item,
   Major,
+  RegisterUserDTO,
   StudentItem,
   StudentItemLog,
   StudentItemResp,
   StudentItemsStatusDO,
+  User,
   WeightedScore
 } from '@/types'
 import { CommonService } from './CommonService'
@@ -92,5 +94,24 @@ export class CollegeService {
 
   static async downloadFileService(sfile: string, fileName: string) {
     const result = CommonService.downloadFile(addPreUrl(`studentitems/files/${sfile}`), fileName)
+  }
+
+  //
+  static async addAdminService(user: RegisterUserDTO) {
+    const result = await usePost(addPreUrl('users'), user)
+  }
+
+  static async listCategoryAdminsService() {
+    const result = await useGet<
+      {
+        category?: Category
+        users?: User[]
+      }[]
+    >(addPreUrl('categories/users'))
+    return shallowRef(result)
+  }
+
+  static async updatePasswordService(account: string) {
+    await usePut(addPreUrl(`passwords/${account}`))
   }
 }

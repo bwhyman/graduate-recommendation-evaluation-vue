@@ -9,6 +9,14 @@ const components: { name: string; component: Component }[] = [
   {
     name: '项管理',
     component: defineAsyncComponent(() => import('./itemmanagement/IndexView.vue'))
+  },
+  {
+    name: '用户管理',
+    component: defineAsyncComponent(() => import('./UserManagementView.vue'))
+  },
+  {
+    name: '重置密码',
+    component: defineAsyncComponent(() => import('./ResetPasswordView.vue'))
   }
 ]
 

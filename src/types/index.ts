@@ -10,6 +10,13 @@ export interface User {
   majorId?: string
 }
 
+export interface RegisterUserDTO {
+  name?: string
+  account?: string
+  mobile?: string
+  catIds?: string[]
+}
+
 export interface UserInfo {
   name: string
   collName?: string

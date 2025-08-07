@@ -19,7 +19,7 @@ if (role === STUDENT) {
 }
 if (role === COLLEGE_ADMIN || role === CATEGORY_ADMIN) {
   const categoriesR = await CollegeService.listCategoryService()
-  menusMapR.value.set('中心', '/college')
+  //menusMapR.value.set('中心', '/college')
   categoriesR.value.forEach(cat =>
     menusMapR.value.set(cat.name ?? '', `/college/categories/${cat.id}`)
   )

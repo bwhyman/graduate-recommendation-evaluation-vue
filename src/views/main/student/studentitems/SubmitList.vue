@@ -5,13 +5,7 @@ import { StudentService } from '@/services/StudentService'
 import { getStatusUtil } from '@/services/Utils'
 import type { Item, StudentItem, StudentItemLog, StudentItemResp } from '@/types'
 
-import {
-  CirclePlusFilled,
-  DeleteFilled,
-  EditPen,
-  UploadFilled,
-  View
-} from '@element-plus/icons-vue'
+import { DeleteFilled, EditPen, UploadFilled, View } from '@element-plus/icons-vue'
 
 const itemId = useRoute().params.itemid as string
 const resultR = await StudentService.listStudentItemsService(itemId)
@@ -58,15 +52,12 @@ const activeF = (index: number) => {
   submitIndexR.value = index
 }
 
-const activeUploadC = computed(() => (index: number) => index === submitIndexR.value && fileR.value)
-
-const changeF = (event: Event) => {
+const changeF = async (event: Event) => {
   const fileList = (event.target as HTMLInputElement).files
   if (!fileList) return
   fileR.value = fileList[0]
-}
+  const studentItem = resultR.value[submitIndexR.value]
 
-const uploadFileF = async (studentItem: StudentItemResp) => {
   if (!fileR.value) {
     createMessageDialog(`请选择上传文件`)
     return
@@ -137,20 +128,14 @@ const closeLogDialF = () => {
       <template #default="scope">
         <div v-if="allowUpdate(scope.row as StudentItemResp)">
           <input type="file" ref="fileInputR" hidden @change="changeF" />
+          <!-- <el-button type="success" @click="activeF(scope.$index)" :icon="UploadFilled" /> -->
           <el-icon
+            class="my-action-icon"
             color="#409EFF"
-            style="cursor: pointer"
-            size="large"
+            style="font-size: 24px"
             @click="activeF(scope.$index)">
-            <CirclePlusFilled />
+            <UploadFilled />
           </el-icon>
-        </div>
-        <div v-if="activeUploadC(scope.$index)">
-          <el-button
-            v-if="allowUpdate(scope.row as StudentItemResp)"
-            type="success"
-            @click="uploadFileF(scope.row)"
-            :icon="UploadFilled" />
           <span>{{ fileR?.name }}</span>
         </div>
         <div v-for="file of (scope.row as StudentItemResp).files" :key="file.id">
