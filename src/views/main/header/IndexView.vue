@@ -16,21 +16,31 @@ if (role === STUDENT) {
   level1Items.value.forEach(item => {
     menusMapR.value.set(item.name ?? '', `/student/items/${item.id}`)
   })
-} else if (role === COLLEGE_ADMIN || role === CATEGORY_ADMIN) {
-  const categoriesMajorsR = await CollegeService.listcategoryMajorsService()
-  categoriesMajorsR.value.forEach(cat =>
-    menusMapR.value.set(cat.category?.name ?? '', `/college/categories/${cat.category?.id}`)
+}
+if (role === COLLEGE_ADMIN || role === CATEGORY_ADMIN) {
+  const categoriesR = await CollegeService.listCategoryService()
+  menusMapR.value.set('中心', '/college')
+  categoriesR.value.forEach(cat =>
+    menusMapR.value.set(cat.name ?? '', `/college/categories/${cat.id}`)
   )
-  menusMapR.value.set('功能', '/college/functions')
+
+  if (role === COLLEGE_ADMIN) {
+    menusMapR.value.set('功能', '/college/functions')
+  }
 }
 
 //
 const activeIndexR = ref('')
 const route = useRoute()
 watch(
-  route,
+  () => route.params,
   () => {
-    activeIndexR.value = route.fullPath
+    activeIndexR.value = ''
+    menusMapR.value.forEach((v, k) => {
+      if (route.fullPath.startsWith(v)) {
+        activeIndexR.value = v
+      }
+    })
   },
   { immediate: true }
 )

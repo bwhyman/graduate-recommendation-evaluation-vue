@@ -48,7 +48,19 @@ export interface WeightedScore {
   ranking?: number
   comment?: string
   verified?: number
-  logs?: { name: string; comment: string }[]
+}
+
+export interface WeightedScoreLog {
+  id?: string
+  studentId?: string
+  userId?: string
+  userName?: string
+  comment?: string
+}
+
+export interface ComfirmWeightedScoreReq {
+  weightedScore?: WeightedScore
+  log?: WeightedScoreLog
 }
 
 export interface Item {
@@ -59,6 +71,8 @@ export interface Item {
   maxItems?: number
   parentId?: string
   comment?: string
+
+  items?: Item[]
 }
 
 export interface StudentItem {
@@ -92,9 +106,32 @@ export interface StudentItemResp {
   itemName?: string
   maxPoints?: number
   maxItems?: number
-  parentId?: string
+  itemParentId?: string
   itemComment?: string
   files?: StudentItemFile[]
+}
+
+export interface StudentItemsStatusDO {
+  userId?: string
+  userName?: string
+  mobile?: string
+  score?: number
+  ranking?: number
+  verified?: number
+  totalPoint?: number
+  totalCount?: number
+  pendingReviewCount?: number
+  rejectedCount?: number
+  pendingModificationCount?: number
+  confirmedCount?: number
+}
+
+export interface StudentItemLog {
+  id?: string
+  studentItemId?: string
+  userId?: string
+  comment?: string
+  createTime?: string
 }
 
 export interface ResultVO<T> {

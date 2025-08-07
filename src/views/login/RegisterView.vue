@@ -84,13 +84,13 @@ const submitF = async () => {
         </el-form-item>
 
         <el-form-item>
-          <el-input v-model="userR.name" placeholder="*姓名" />
+          <el-input v-model="userR.name" placeholder="*姓名" size="large" />
         </el-form-item>
         <el-form-item>
-          <el-input v-model="userR.account" placeholder="*学号" />
+          <el-input v-model="userR.account" placeholder="*学号" size="large" />
         </el-form-item>
         <el-form-item>
-          <el-input v-model="userR.mobile" placeholder="*手机号" />
+          <el-input v-model="userR.mobile" placeholder="*手机号" size="large" />
         </el-form-item>
 
         <el-form-item>

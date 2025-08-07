@@ -37,7 +37,7 @@ const isVerified = () => weightScoreR.value.verified === 1
 <template>
   <el-row class="my-row">
     <el-col>
-      <p style="margin-bottom: 8px">成绩认定后将无法修改。</p>
+      <p style="margin-bottom: 8px">成绩认定后将禁止修改。</p>
       <div style="margin-bottom: 8px" v-if="isVerified()">
         <p>
           加权成绩：

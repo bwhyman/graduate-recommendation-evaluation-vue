@@ -10,10 +10,10 @@ const registerCom = defineAsyncComponent(() => import('./RegisterView.vue'))
     <el-col :span="18" :offset="3" style="margin-top: 15px">
       <el-card class="box-card">
         <el-tabs v-model="activeName" class="demo-tabs">
-          <el-tab-pane label="Login" name="Login">
+          <el-tab-pane label="登录" name="Login">
             <LoginView />
           </el-tab-pane>
-          <el-tab-pane label="Register" name="Register">
+          <el-tab-pane label="学生注册" name="Register">
             <registerCom v-if="activeName === 'Register'" />
           </el-tab-pane>
         </el-tabs>

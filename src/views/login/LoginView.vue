@@ -38,7 +38,6 @@ const loginF = async () => {
       <el-button type="primary" @click="loginF" :disabled="!user.account || !user.password">
         <el-icon><SwitchButton /></el-icon>
       </el-button>
-      1000002720; 2022223893
     </el-col>
   </el-row>
 </template>

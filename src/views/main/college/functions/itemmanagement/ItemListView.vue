@@ -13,6 +13,6 @@ const getTopItems = () => itemsR.value.filter(i => !i.parentId)
     <h3 @click="AddItemDialog({}, props.category)" style="cursor: pointer">
       {{ props.category.name }}
     </h3>
-    <ItemNode v-for="item of getTopItems()" :item="item" :allitems="itemsR" :key="item.id" />
+    <ItemNode v-for="item of getTopItems()" :item="item" :key="item.id" />
   </div>
 </template>

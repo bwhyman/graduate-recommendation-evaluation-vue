@@ -1,11 +1,17 @@
-import { useDelete, useGet, usePatch, usePost } from '@/axios'
-import { useScoreitemsStore } from '@/stores/ScoreItemsStore'
+import axios, { useDelete, useGet, usePatch, usePost } from '@/axios'
+import { createProgressNotification } from '@/components/progress'
+import { useCategoriesMajorsItemsStore } from '@/stores/CategoriesMajorsItemsStore'
+import { useStudentScoreitemsStore } from '@/stores/StudentScoreItemsStore'
 import type {
   College,
   Item,
   Major,
+  Progress,
+  ResultVO,
   StudentItem,
+  StudentItemLog,
   StudentItemResp,
+  StudentItemsStatusDO,
   User,
   WeightedScore
 } from '@/types'
@@ -14,7 +20,8 @@ import { ELLoading, StoreCache, StoreClearObject, StoreMapCache } from './Decora
 
 const addPreUrl = (url: string) => `student/${url}`
 
-const scoreItemsStore = useScoreitemsStore()
+const scoreItemsStore = useStudentScoreitemsStore()
+const categoryMajorsStore = useCategoriesMajorsItemsStore()
 
 export class StudentService {
   static async registerService(user: User) {
@@ -26,10 +33,10 @@ export class StudentService {
     return shallowRef(result)
   }
 
-  @StoreMapCache(scoreItemsStore.ItemsMapR)
+  @StoreMapCache(categoryMajorsStore.itemsMapR)
   @ELLoading()
   static async listItemsService(itemid: string) {
-    const result = await useGet<Item[]>(addPreUrl(`items/${itemid}`))
+    const result = await useGet<Item>(addPreUrl(`items/${itemid}`))
     return shallowRef(result)
   }
 
@@ -78,21 +85,37 @@ export class StudentService {
 
   @StoreMapCache(scoreItemsStore.studentItemsMapR, { replace: true, indexs: [1] })
   static async addStudentItemService(stuItem: StudentItem, rootitemid: string) {
-    const resp = await usePost<StudentItemResp[]>(addPreUrl('studentitems'), stuItem)
+    const resp = await usePost<StudentItemResp[]>(addPreUrl(`studentitems/${rootitemid}`), stuItem)
     return shallowRef(resp)
   }
   //
   @StoreMapCache(scoreItemsStore.studentItemsMapR, { replace: true, indexs: [2] })
+  //@ELLoading()
   static async uploadStudentItemFileService(
     fdata: FormData,
     stuitemid: string,
     rootitemid: string
   ) {
-    const resp = await usePost<StudentItemResp[]>(
+    const progressR = ref<{ progress: Progress }>({
+      progress: { percentage: 0, title: 'dddd', rate: 0, total: 0, loaded: 0 }
+    })
+
+    const progNotif = createProgressNotification(progressR.value)
+    const resp = await axios.post<ResultVO<StudentItemResp[]>>(
       addPreUrl(`studentitems/${stuitemid}/files/rootitems/${rootitemid}`),
-      fdata
+      fdata,
+      {
+        onUploadProgress(ProgressEvent) {
+          if (!ProgressEvent) return
+          progressR.value.progress.percentage = ProgressEvent.progress ?? 0
+          progressR.value.progress.rate = ProgressEvent.rate ?? 0
+          progressR.value.progress.loaded = ProgressEvent.loaded ?? 0
+          progressR.value.progress.total = ProgressEvent.total ?? 0
+        }
+      }
     )
-    return shallowRef(resp)
+    progNotif.close()
+    return shallowRef(resp.data.data)
   }
 
   @StoreMapCache(scoreItemsStore.studentItemsMapR, { replace: true, indexs: [1] })
@@ -106,5 +129,16 @@ export class StudentService {
       stuItem
     )
     return shallowRef(resp)
+  }
+
+  @StoreCache(scoreItemsStore.studentItemStatusR)
+  static async getStudentItemStatusesService() {
+    const result = await useGet<StudentItemsStatusDO>(addPreUrl('statuses'))
+    return shallowRef(result)
+  }
+
+  static async listStudentItemLogsService(id: string) {
+    const result = await useGet<StudentItemLog[]>(addPreUrl(`logs/${id}`))
+    return shallowRef(result)
   }
 }

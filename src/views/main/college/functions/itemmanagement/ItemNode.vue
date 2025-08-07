@@ -2,13 +2,13 @@
 import type { Item } from '@/types'
 import { AddItemDialog } from './CreateItemDialog'
 
-const props = defineProps<{ item: Item; allitems: Item[] }>()
-const childrenItemsR = shallowRef<Item[]>([])
+const props = defineProps<{ item: Item }>()
+const childrenItemsR = shallowRef<Item[]>(props.item.items ?? [])
 // 添加后，返回新数据，更新，但组件不会重新创建，通过监听数据实现重新聚合
 watch(
-  () => props.allitems,
+  () => props.item,
   () => {
-    childrenItemsR.value = props.allitems.filter(item => item.parentId === props.item.id)
+    childrenItemsR.value = props.item.items ?? []
   },
   { immediate: true }
 )
@@ -25,7 +25,7 @@ watch(
       </el-text>
 
       <template v-if="childrenItemsR.length > 0">
-        <ItemNode v-for="ch of childrenItemsR" :key="ch.id" :item="ch" :allitems="props.allitems" />
+        <ItemNode v-for="ch of childrenItemsR" :key="ch.id" :item="ch" />
       </template>
     </li>
   </ul>

@@ -52,4 +52,11 @@ body {
 .my-col {
   margin-bottom: 10px;
 }
+
+.el-icon.my-action-icon {
+  font-size: 18px;
+  cursor: pointer;
+  vertical-align: middle;
+  margin-right: 8px;
+}
 </style>

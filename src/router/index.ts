@@ -47,7 +47,7 @@ const router = createRouter({
             },
             {
               path: 'items/:itemid',
-              component: () => import('@/views/main/student/items/IndexView.vue')
+              component: () => import('@/views/main/student/studentitems/IndexView.vue')
             }
           ]
         },
@@ -59,12 +59,22 @@ const router = createRouter({
           },
           children: [
             {
+              path: '',
+              component: () => import('@/views/main/college/HomeView.vue')
+            },
+            {
               path: 'functions',
               component: () => import('@/views/main/college/functions/IndexView.vue')
             },
             {
               path: 'categories/:catid',
-              component: () => import('@/views/main/college/CategoryView.vue')
+              component: () => import('@/views/main/college/MajorView.vue'),
+              children: [
+                {
+                  path: 'marjors/:majorid',
+                  component: () => import('@/views/main/college/StudentView.vue')
+                }
+              ]
             }
           ]
         }
