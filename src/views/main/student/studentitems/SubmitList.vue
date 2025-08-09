@@ -4,7 +4,6 @@ import { CONFIRMED } from '@/services/Const'
 import { StudentService } from '@/services/StudentService'
 import { getStatusUtil } from '@/services/Utils'
 import type { Item, StudentItem, StudentItemLog, StudentItemResp } from '@/types'
-
 import { DeleteFilled, EditPen, UploadFilled, View } from '@element-plus/icons-vue'
 
 const itemId = useRoute().params.itemid as string
@@ -73,7 +72,7 @@ const changeF = async (event: Event) => {
   fileR.value = undefined
 }
 
-const gradingDialogVisable = ref(false)
+const editDialogVisable = ref(false)
 
 const activeEditF = (stud: StudentItemResp) => {
   selectedR.value.item = {
@@ -89,10 +88,10 @@ const activeEditF = (stud: StudentItemResp) => {
     rootItemId: stud.rootItemId,
     itemId: stud.itemId
   }
-  gradingDialogVisable.value = true
+  editDialogVisable.value = true
 }
 
-const closeF = () => (gradingDialogVisable.value = false)
+const closeF = () => (editDialogVisable.value = false)
 const StudentItemDialog = defineAsyncComponent(() => import('./EditDialog.vue'))
 
 const allowUpdate = (stuItem: StudentItemResp) => stuItem.status !== CONFIRMED
@@ -218,7 +217,7 @@ const closeLogDialF = () => {
     </el-table-column>
   </el-table>
   <StudentItemDialog
-    v-if="gradingDialogVisable"
+    v-if="editDialogVisable"
     :item="selectedR.item!"
     :studentitem="selectedR.sudentItem!"
     :rootitemid="itemId"

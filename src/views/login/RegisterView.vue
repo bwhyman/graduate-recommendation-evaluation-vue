@@ -5,7 +5,7 @@ import { StudentService } from '@/services/StudentService'
 import type { Major, User } from '@/types'
 import { User as UserICO } from '@element-plus/icons-vue'
 
-const departs = await StudentService.listCollegesService()
+const departs = await CommonService.listCollegesService()
 
 const collegeIdR = ref('')
 const majorR = ref<Major>()

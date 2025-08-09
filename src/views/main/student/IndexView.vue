@@ -8,5 +8,5 @@
       </el-tag>
     </el-col>
   </el-row>
-  <RouterView />
+  <RouterView :key="$route.fullPath" />
 </template>

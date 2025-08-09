@@ -99,7 +99,7 @@ const closeconfirmDialog = async () => {
     <div style="max-width: 1200px; margin: auto">
       <el-row>
         <el-col>
-          <p class="title">基本信息数据</p>
+          <span class="title">基本信息数据</span>
         </el-col>
       </el-row>
       <el-row>
@@ -115,7 +115,10 @@ const closeconfirmDialog = async () => {
       <el-divider border-style="dashed" />
       <el-row>
         <el-col>
-          <p class="title">加权成绩数据</p>
+          <span class="title">
+            加权成绩数据
+            <span v-if="weightScoreR?.verified" style="color: red; font-weight: bold">已认定</span>
+          </span>
         </el-col>
       </el-row>
 
@@ -140,13 +143,15 @@ const closeconfirmDialog = async () => {
           <el-button type="primary" @click="submitWeightedScoreF">
             <el-icon><EditPen /></el-icon>
           </el-button>
-          <span v-if="weightScoreR?.verified">已认定</span>
         </el-col>
       </el-row>
       <el-divider border-style="dashed" />
       <el-row>
         <el-col>
-          <p class="title">评定指标参考数据(以文件为准!)</p>
+          <div>
+            <span class="title">评定指标参考数据</span>
+            说明：1.评定标准以学院文件要求为准；2.学生填报数是否超过限项，需人工审核；
+          </div>
         </el-col>
       </el-row>
       <el-row>
@@ -159,7 +164,7 @@ const closeconfirmDialog = async () => {
       </el-row>
       <el-row>
         <el-col :span="4">
-          <p class="title">学生提交数据</p>
+          <span class="title">学生提交数据</span>
         </el-col>
         <el-col :span="8">
           <el-button type="primary" @click="listStudentItemsAllF" style="margin-right: 8px">

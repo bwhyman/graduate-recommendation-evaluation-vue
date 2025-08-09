@@ -21,23 +21,17 @@ const submitF = async () => {
   if (!studentItemR.value.name) {
     throw '必须添加标题'
   }
-  if (props.studentitem && props.studentitem.id) {
-    await StudentService.updateStudentItemService(
-      studentItemR.value,
-      props.rootitemid,
-      studentItemR.value.id!
-    )
-    props.close()
-    createElNotificationSuccess('指标项添加成功')
-    return
+
+  if (!props.studentitem || !props.studentitem.id) {
+    throw '读取错误'
   }
-  //
-  studentItemR.value.rootItemId = props.rootitemid
-  studentItemR.value.itemId = props.item.id
-  await StudentService.addStudentItemService(studentItemR.value, props.rootitemid)
-  createElNotificationSuccess('指标项添加成功')
-  studentItemR.value = {}
+  await StudentService.updateStudentItemService(
+    studentItemR.value,
+    props.rootitemid,
+    studentItemR.value.id!
+  )
   props.close()
+  createElNotificationSuccess('指标项更新成功')
 }
 const submitDisabledC = computed(() => !studentItemR.value.name)
 

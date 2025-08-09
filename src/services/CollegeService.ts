@@ -16,7 +16,7 @@ import type {
   WeightedScore
 } from '@/types'
 import { CommonService } from './CommonService'
-import { StoreCache, StoreMapCache } from './Decorators'
+import { ELLoading, StoreCache, StoreMapCache } from './Decorators'
 
 const addPreUrl = (url: string) => `college/${url}`
 
@@ -60,6 +60,7 @@ export class CollegeService {
   }
 
   @StoreMapCache(categoryMajorsStore.majorsMapR)
+  @ELLoading()
   static async listStudentsStatusesService(majorid: string) {
     const result = await useGet<StudentItemsStatusDO[]>(
       addPreUrl(`majors/${majorid}/students/statuses`)

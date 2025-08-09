@@ -3,9 +3,7 @@ import { createProgressNotification } from '@/components/progress'
 import { useCategoriesMajorsItemsStore } from '@/stores/CategoriesMajorsItemsStore'
 import { useStudentScoreitemsStore } from '@/stores/StudentScoreItemsStore'
 import type {
-  College,
   Item,
-  Major,
   Progress,
   ResultVO,
   StudentItem,
@@ -51,14 +49,19 @@ export class StudentService {
     const result = await usePost<WeightedScore>(addPreUrl('weightedscores'), score)
   }
 
-  static async listCollegesService() {
-    return await useGet<{ college: College; majors: Major[] }[]>('open/colleges')
+  private static async _listStudentItemsService(rootitemid: string) {
+    const result = await useGet<StudentItemResp[]>(addPreUrl(`studentitems/${rootitemid}`))
+    return shallowRef(result)
   }
 
   @StoreMapCache(scoreItemsStore.studentItemsMapR)
   static async listStudentItemsService(rootitemid: string) {
-    const result = await useGet<StudentItemResp[]>(addPreUrl(`studentitems/${rootitemid}`))
-    return shallowRef(result)
+    return StudentService._listStudentItemsService(rootitemid)
+  }
+
+  @StoreMapCache(scoreItemsStore.studentItemsMapR, { replace: true })
+  static async listStudentItemsServiceRaw(rootitemid: string) {
+    return StudentService._listStudentItemsService(rootitemid)
   }
 
   //
@@ -83,21 +86,20 @@ export class StudentService {
     return shallowRef(resp)
   }
 
-  @StoreMapCache(scoreItemsStore.studentItemsMapR, { replace: true, indexs: [1] })
-  static async addStudentItemService(stuItem: StudentItem, rootitemid: string) {
-    const resp = await usePost<StudentItemResp[]>(addPreUrl(`studentitems/${rootitemid}`), stuItem)
-    return shallowRef(resp)
+  static async addStudentItemService(stuItem: StudentItem) {
+    const resp = await usePost<StudentItemResp[]>(addPreUrl(`studentitems`), stuItem)
   }
   //
   @StoreMapCache(scoreItemsStore.studentItemsMapR, { replace: true, indexs: [2] })
-  //@ELLoading()
   static async uploadStudentItemFileService(
     fdata: FormData,
     stuitemid: string,
     rootitemid: string
   ) {
+    const uploadFile = fdata.get('uploadFile')
+    const fileName = uploadFile instanceof File ? uploadFile.name : ''
     const progressR = ref<{ progress: Progress }>({
-      progress: { percentage: 0, title: 'dddd', rate: 0, total: 0, loaded: 0 }
+      progress: { percentage: 0, title: fileName, rate: 0, total: 0, loaded: 0 }
     })
 
     const progNotif = createProgressNotification(progressR.value)

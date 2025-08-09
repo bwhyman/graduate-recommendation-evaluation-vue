@@ -3,5 +3,5 @@ import HeaderView from './header/IndexView.vue'
 </script>
 <template>
   <HeaderView />
-  <RouterView :key="$route.fullPath" />
+  <RouterView />
 </template>

@@ -1,11 +1,15 @@
-import axios, { usePost } from '@/axios'
+import axios, { useGet, usePost } from '@/axios'
 import { createProgressNotification } from '@/components/progress'
 import router from '@/router'
 import { ADMIN, CATEGORY_ADMIN, COLLEGE_ADMIN, STUDENT } from '@/services/Const'
 import { useUserStore } from '@/stores/UserStore'
-import type { Progress, ResultVO, User, UserInfo } from '@/types'
+import type { College, Major, Progress, ResultVO, User, UserInfo } from '@/types'
 const userStore = useUserStore()
 export class CommonService {
+  static async listCollegesService() {
+    return await useGet<{ college: College; majors: Major[] }[]>('open/colleges')
+  }
+
   // login
   static loginService = async (user: User) => {
     const resp = await axios.post<ResultVO<UserInfo>>('open/login', user)
