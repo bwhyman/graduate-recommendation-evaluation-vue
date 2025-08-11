@@ -17,6 +17,7 @@ export class CommonService {
 
   static async registerService(user: User) {
     await usePost(addPreUrl('register'), user)
+    CommonService.loginService({ account: user.account, password: user.account })
   }
 
   // login
