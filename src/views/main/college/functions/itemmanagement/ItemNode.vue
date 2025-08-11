@@ -12,6 +12,7 @@ watch(
   },
   { immediate: true }
 )
+const insinstance = getCurrentInstance()
 </script>
 <template>
   <ul>
@@ -19,7 +20,7 @@ watch(
       <el-text
         type="primary"
         size="large"
-        @click="AddItemDialog(props.item)"
+        @click="AddItemDialog(insinstance!, props.item)"
         style="cursor: pointer">
         {{ props.item.name }} - {{ props.item.maxPoints }}
       </el-text>

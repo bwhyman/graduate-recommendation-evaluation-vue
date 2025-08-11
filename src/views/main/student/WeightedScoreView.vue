@@ -5,10 +5,11 @@ import type { WeightedScore } from '@/types'
 import { EditPen } from '@element-plus/icons-vue'
 
 const weightScoreR = ref<WeightedScore>({})
-const result = await StudentService.getWeightedScoreService()
-if (result) {
-  weightScoreR.value = result.value
-}
+const { data: result, suspense } = StudentService.getWeightedScoreService()
+const { mutateAsync } = StudentService.addWeightedScoreService()
+await suspense()
+
+weightScoreR.value = { ...result.value }
 
 const submitF = async () => {
   const score = weightScoreR.value.score
@@ -22,7 +23,7 @@ const submitF = async () => {
   if (weightScoreR?.value.verified === 1) {
     throw '已认定，无法修改'
   }
-  await StudentService.addWeightedScoreService(weightScoreR.value)
+  await mutateAsync(weightScoreR.value)
   createElNotificationSuccess('更新成绩成功')
 }
 

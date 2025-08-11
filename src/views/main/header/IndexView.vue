@@ -9,21 +9,24 @@ import SettingView from './SettingView.vue'
 const menusMapR = ref(new Map<string, string>())
 const role = CommonService.getRoleService()
 
+const roleR = ref(role ?? '')
+const { data: level1Items, suspense: stuSusp } = StudentService.listTopLevelItemsService(roleR)
+const { data: categoriesR, suspense: collSusp } = CollegeService.listCategoryService(roleR)
+
 if (role === STUDENT) {
   menusMapR.value.set('中心', '/student')
   menusMapR.value.set('加权成绩', '/student/weightedscore')
-  const level1Items = await StudentService.listLevel1ItemsService()
-  level1Items.value.forEach(item => {
+  await stuSusp()
+  level1Items.value?.forEach(item => {
     menusMapR.value.set(item.name ?? '', `/student/items/${item.id}`)
   })
 }
 if (role === COLLEGE_ADMIN || role === CATEGORY_ADMIN) {
-  const categoriesR = await CollegeService.listCategoryService()
-  //menusMapR.value.set('中心', '/college')
-  categoriesR.value.forEach(cat =>
+  menusMapR.value.set('中心', '/college')
+  await collSusp()
+  categoriesR.value!.forEach(cat =>
     menusMapR.value.set(cat.name ?? '', `/college/categories/${cat.id}`)
   )
-
   if (role === COLLEGE_ADMIN) {
     menusMapR.value.set('功能', '/college/functions')
   }

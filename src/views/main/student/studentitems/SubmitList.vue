@@ -3,36 +3,38 @@ import { createElNotificationSuccess, createMessageDialog } from '@/components/m
 import { CONFIRMED } from '@/services/Const'
 import { StudentService } from '@/services/StudentService'
 import { getStatusUtil } from '@/services/Utils'
-import type { Item, StudentItem, StudentItemLog, StudentItemResp } from '@/types'
+import type { Item, StudentItem, StudentItemResp } from '@/types'
 import { DeleteFilled, EditPen, UploadFilled, View } from '@element-plus/icons-vue'
 
-const itemId = useRoute().params.itemid as string
-const resultR = await StudentService.listStudentItemsService(itemId)
-
+const rootItemId = useRoute().params.itemid as string
 const selectedR = ref<{ item?: Item; sudentItem?: StudentItem }>({})
-
+//
 const downloadFileF = async (fileid: string, filename: string) => {
   await StudentService.downloadStudentItemFileService(fileid, filename)
 }
-
+const { mutate } = StudentService.removeStudentItemService(rootItemId)
+const { data: resultR, suspense } = StudentService.listStudentItemsService(rootItemId)
+await suspense()
 const removeStudentItemF = (id: string, name: string) => {
   ElMessageBox.confirm(`确定移除，${name}，提交条目？`, 'Warning', {
     confirmButtonText: 'OK',
     cancelButtonText: 'Cancel',
     type: 'warning'
-  }).then(async () => {
-    await StudentService.removeStudentItemService(id, itemId)
+  }).then(() => {
+    mutate(id)
     createElNotificationSuccess('条目已移除')
   })
 }
 
+//
+const { mutate: mutateFile } = StudentService.removeStudentItemFileService(rootItemId)
 const removeStudentItemFileF = async (id: string, name: string) => {
   ElMessageBox.confirm(`确定移除，${name}，文件？`, 'Warning', {
     confirmButtonText: 'OK',
     cancelButtonText: 'Cancel',
     type: 'warning'
-  }).then(async () => {
-    await StudentService.removeStudentItemFileService(id, itemId)
+  }).then(() => {
+    mutateFile(id)
     createElNotificationSuccess('文件已移除')
   })
 }
@@ -51,11 +53,14 @@ const activeF = (index: number) => {
   submitIndexR.value = index
 }
 
+//
+const { mutate: mutateUploadFile, isSuccess } =
+  StudentService.uploadStudentItemFileService(rootItemId)
 const changeF = async (event: Event) => {
   const fileList = (event.target as HTMLInputElement).files
   if (!fileList) return
   fileR.value = fileList[0]
-  const studentItem = resultR.value[submitIndexR.value]
+  const studentItem = resultR.value![submitIndexR.value]
 
   if (!fileR.value) {
     createMessageDialog(`请选择上传文件`)
@@ -65,8 +70,12 @@ const changeF = async (event: Event) => {
   const fdata = new FormData()
   fdata.append('uploadFile', fileR.value, `${studentItem.itemName}-${fName}`)
 
-  await StudentService.uploadStudentItemFileService(fdata, studentItem.id!, itemId)
-  createElNotificationSuccess('佐证文件上传成功')
+  mutateUploadFile({ fdata, stuitemid: studentItem.id ?? '' })
+
+  watch(isSuccess, () => {
+    createElNotificationSuccess('佐证文件上传成功')
+  })
+
   // 再次选择时，需清空值
   ;(fileInputR.value as HTMLInputElement).value = ''
   fileR.value = undefined
@@ -96,11 +105,10 @@ const StudentItemDialog = defineAsyncComponent(() => import('./EditDialog.vue'))
 
 const allowUpdate = (stuItem: StudentItemResp) => stuItem.status !== CONFIRMED
 
+const selectStuItemLogIdR = ref('')
 //
-const logsR = shallowRef<StudentItemLog[]>([])
-const getLogsF = async (itemid: string) => {
-  const result = await StudentService.listStudentItemLogsService(itemid)
-  logsR.value = result.value ?? []
+const getLogsF = (itemid: string) => {
+  selectStuItemLogIdR.value = itemid
   logActiveR.value = true
 }
 
@@ -220,10 +228,10 @@ const closeLogDialF = () => {
     v-if="editDialogVisable"
     :item="selectedR.item!"
     :studentitem="selectedR.sudentItem!"
-    :rootitemid="itemId"
+    :rootitemid="rootItemId"
     :close="closeF" />
 
-  <logdialog :logs="logsR" :close="closeLogDialF" v-if="logActiveR" />
+  <logdialog :stu-item-id="selectStuItemLogIdR" :close="closeLogDialF" v-if="logActiveR" />
 </template>
 <style scoped>
 .tag-ellipsis {

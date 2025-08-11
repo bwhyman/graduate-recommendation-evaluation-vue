@@ -32,3 +32,22 @@ export const UNVERIFIED = 0
 export const SCORE_STATUS_MAP = new Map<number, { name: string; color: string }>()
 SCORE_STATUS_MAP.set(UNVERIFIED, { name: '待审核', color: 'info' })
 SCORE_STATUS_MAP.set(VERIFIED, { name: '已认定', color: 'success' })
+
+export const querycachename = {
+  student: {
+    studentitems: 'studentitems',
+    items: 'items',
+    weightedscores: 'weightedscores',
+    statuses: 'statuses'
+  },
+  college: {
+    categories: 'categories',
+    majors: 'majors',
+    majorstudentstatuses: 'majorstudentstatuses',
+    studentweightedscores: 'studentweightedscores',
+    studentitems: 'studentitems',
+    categoryitems: 'categoryitems',
+    categoryadmins: 'categoryadmins',
+    categoriesmajors: 'categoriesmajors'
+  }
+}

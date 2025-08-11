@@ -1,7 +1,5 @@
 import axios, { useDelete, useGet, usePatch, usePost } from '@/axios'
 import { createProgressNotification } from '@/components/progress'
-import { useCategoriesMajorsItemsStore } from '@/stores/CategoriesMajorsItemsStore'
-import { useStudentScoreitemsStore } from '@/stores/StudentScoreItemsStore'
 import type {
   Item,
   Progress,
@@ -10,92 +8,93 @@ import type {
   StudentItemLog,
   StudentItemResp,
   StudentItemsStatusDO,
-  User,
   WeightedScore
 } from '@/types'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { CommonService } from './CommonService'
-import { ELLoading, StoreCache, StoreClearObject, StoreMapCache } from './Decorators'
-
+import { querycachename, STUDENT } from './Const'
+//
 const addPreUrl = (url: string) => `student/${url}`
 
-const scoreItemsStore = useStudentScoreitemsStore()
-const categoryMajorsStore = useCategoriesMajorsItemsStore()
-
 export class StudentService {
-  static async registerService(user: User) {
-    await usePost('open/register', user)
+  //
+  static listTopLevelItemsService(role: Ref<string>) {
+    return useQuery({
+      queryKey: ['topitems'],
+      queryFn: () => useGet<Item[]>(addPreUrl('topitems')),
+      enabled: role.value === STUDENT
+    })
   }
 
-  static async listLevel1ItemsService() {
-    const result = await useGet<Item[]>(addPreUrl('topitems'))
-    return shallowRef(result)
+  static listItemsService(itemid: string) {
+    return useQuery({
+      queryKey: [querycachename.student.items, itemid],
+      queryFn: () => useGet<Item>(addPreUrl(`items/${itemid}`))
+    })
   }
 
-  @StoreMapCache(categoryMajorsStore.itemsMapR)
-  @ELLoading()
-  static async listItemsService(itemid: string) {
-    const result = await useGet<Item>(addPreUrl(`items/${itemid}`))
-    return shallowRef(result)
+  static getWeightedScoreService() {
+    return useQuery({
+      queryKey: [querycachename.student.weightedscores],
+      queryFn: () => useGet<WeightedScore>(addPreUrl('weightedscores'))
+    })
   }
 
-  @StoreCache(scoreItemsStore.weightedScoreR)
-  static async getWeightedScoreService() {
-    const weightedScore = await useGet<WeightedScore>(addPreUrl('weightedscores'))
-    return shallowRef(weightedScore)
+  static addWeightedScoreService() {
+    const qc = useQueryClient()
+    return useMutation({
+      mutationFn: (score: WeightedScore) =>
+        usePost<WeightedScore>(addPreUrl('weightedscores'), score),
+      onSuccess: () => qc.refetchQueries({ queryKey: [querycachename.student.weightedscores] })
+    })
   }
 
-  @StoreClearObject(scoreItemsStore.weightedScoreR)
-  static async addWeightedScoreService(score: WeightedScore) {
-    const result = await usePost<WeightedScore>(addPreUrl('weightedscores'), score)
-  }
-
-  private static async _listStudentItemsService(rootitemid: string) {
-    const result = await useGet<StudentItemResp[]>(addPreUrl(`studentitems/${rootitemid}`))
-    return shallowRef(result)
-  }
-
-  @StoreMapCache(scoreItemsStore.studentItemsMapR)
-  static async listStudentItemsService(rootitemid: string) {
-    return StudentService._listStudentItemsService(rootitemid)
-  }
-
-  @StoreMapCache(scoreItemsStore.studentItemsMapR, { replace: true })
-  static async listStudentItemsServiceRaw(rootitemid: string) {
-    return StudentService._listStudentItemsService(rootitemid)
+  static listStudentItemsService(rootitemid: string) {
+    return useQuery({
+      queryKey: [querycachename.student.studentitems, rootitemid],
+      queryFn: () => useGet<StudentItemResp[]>(addPreUrl(`studentitems/${rootitemid}`))
+    })
   }
 
   //
   static async downloadStudentItemFileService(id: string, name: string) {
-    const resp = await CommonService.downloadFile(addPreUrl(`studentitems/files/${id}`), name)
+    await CommonService.downloadFile(addPreUrl(`studentitems/files/${id}`), name)
   }
 
-  // 之前按rootitemid为键缓存的
-  @StoreMapCache(scoreItemsStore.studentItemsMapR, { replace: true, indexs: [1] })
-  static async removeStudentItemFileService(fileid: string, rootitemid: string) {
-    const resp = await useDelete<StudentItemResp[]>(
-      addPreUrl(`studentitems/${rootitemid}/files/${fileid}`)
-    )
-    return shallowRef(resp)
-  }
-  //
-  @StoreMapCache(scoreItemsStore.studentItemsMapR, { replace: true, indexs: [1] })
-  static async removeStudentItemService(id: string, rootitemid: string) {
-    const resp = await useDelete<StudentItemResp[]>(
-      addPreUrl(`studentitems/${rootitemid}/sitems/${id}`)
-    )
-    return shallowRef(resp)
+  static removeStudentItemFileService(rootitemid: string) {
+    const qc = useQueryClient()
+    return useMutation({
+      mutationFn: (fileid: string) =>
+        useDelete<StudentItemResp[]>(addPreUrl(`studentitems/files/${fileid}`)),
+      onSuccess: () =>
+        qc.refetchQueries({ queryKey: [querycachename.student.studentitems, rootitemid] })
+    })
   }
 
-  static async addStudentItemService(stuItem: StudentItem) {
-    const resp = await usePost<StudentItemResp[]>(addPreUrl(`studentitems`), stuItem)
-  }
   //
-  @StoreMapCache(scoreItemsStore.studentItemsMapR, { replace: true, indexs: [2] })
-  static async uploadStudentItemFileService(
-    fdata: FormData,
-    stuitemid: string,
-    rootitemid: string
-  ) {
+  static removeStudentItemService(rootitemid: string) {
+    const qc = useQueryClient()
+    return useMutation({
+      mutationFn: (stuitemid: string) =>
+        useDelete<StudentItemResp[]>(addPreUrl(`studentitems/${stuitemid}`)),
+      onSuccess: () =>
+        qc.refetchQueries({ queryKey: [querycachename.student.studentitems, rootitemid] })
+    })
+  }
+
+  //
+  static addStudentItemService(rootitemid: string) {
+    const qc = useQueryClient()
+    return useMutation({
+      mutationFn: (stuItem: StudentItem) =>
+        usePost<StudentItemResp[]>(addPreUrl(`studentitems`), stuItem),
+      onSuccess: () =>
+        qc.refetchQueries({ queryKey: [querycachename.student.studentitems, rootitemid] })
+    })
+  }
+
+  //
+  private static async _uploadStudentItemFileService(fdata: FormData, stuitemid: string) {
     const uploadFile = fdata.get('uploadFile')
     const fileName = uploadFile instanceof File ? uploadFile.name : ''
     const progressR = ref<{ progress: Progress }>({
@@ -104,7 +103,7 @@ export class StudentService {
 
     const progNotif = createProgressNotification(progressR.value)
     const resp = await axios.post<ResultVO<StudentItemResp[]>>(
-      addPreUrl(`studentitems/${stuitemid}/files/rootitems/${rootitemid}`),
+      addPreUrl(`studentitems/${stuitemid}/files`),
       fdata,
       {
         onUploadProgress(ProgressEvent) {
@@ -117,30 +116,40 @@ export class StudentService {
       }
     )
     progNotif.close()
-    return shallowRef(resp.data.data)
+    return resp.data.data
   }
 
-  @StoreMapCache(scoreItemsStore.studentItemsMapR, { replace: true, indexs: [1] })
-  static async updateStudentItemService(
-    stuItem: StudentItem,
-    rootitemid: string,
-    studentItemId: string
-  ) {
-    const resp = await usePatch<StudentItemResp[]>(
-      addPreUrl(`studentitems/${rootitemid}/sitems/${studentItemId}`),
-      stuItem
-    )
-    return shallowRef(resp)
+  static uploadStudentItemFileService(rootitemid: string) {
+    const qc = useQueryClient()
+    return useMutation({
+      mutationFn: async ({ fdata, stuitemid }: { fdata: FormData; stuitemid: string }) =>
+        await StudentService._uploadStudentItemFileService(fdata, stuitemid),
+      onSuccess: () =>
+        qc.refetchQueries({ queryKey: [querycachename.student.studentitems, rootitemid] })
+    })
   }
 
-  @StoreCache(scoreItemsStore.studentItemStatusR)
-  static async getStudentItemStatusesService() {
-    const result = await useGet<StudentItemsStatusDO>(addPreUrl('statuses'))
-    return shallowRef(result)
+  static updateStudentItemService(rootitemid: string) {
+    const qc = useQueryClient()
+    return useMutation({
+      mutationFn: ({ studentItemId, stuItem }: { studentItemId: string; stuItem: StudentItem }) =>
+        usePatch<StudentItemResp[]>(addPreUrl(`studentitems/${studentItemId}`), stuItem),
+      onSuccess: () =>
+        qc.refetchQueries({ queryKey: [querycachename.student.studentitems, rootitemid] })
+    })
   }
 
-  static async listStudentItemLogsService(id: string) {
-    const result = await useGet<StudentItemLog[]>(addPreUrl(`logs/${id}`))
-    return shallowRef(result)
+  static getStudentItemStatusesService() {
+    return useQuery({
+      queryKey: [querycachename.student.statuses],
+      queryFn: () => useGet<StudentItemsStatusDO>(addPreUrl('statuses'))
+    })
+  }
+
+  static listStudentItemLogsService(id: string) {
+    return useQuery({
+      queryKey: ['logs', id],
+      queryFn: () => useGet<StudentItemLog[]>(addPreUrl(`logs/${id}`))
+    })
   }
 }

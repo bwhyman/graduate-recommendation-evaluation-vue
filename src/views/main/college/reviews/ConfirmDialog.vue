@@ -25,6 +25,9 @@ const closeF = () => {
 //
 const adminUser = CommonService.getUserInfoService()
 //
+
+const { mutateAsync } = CollegeService.updateStudentItemSercice(props.stuitem.userId!)
+
 const submitF = async () => {
   const stuItem: StudentItem = { id: props.stuitem.id }
   const log: StudentItemLog = { studentItemId: props.stuitem.id }
@@ -52,7 +55,7 @@ const submitF = async () => {
     log.comment = `${adminUser.value?.name}，建议修改。${commentR.value}`
   }
 
-  await CollegeService.updateStudentItemSercice(props.stuitem.userId!, stuItem, log)
+  await mutateAsync({ sid: props.stuitem.userId!, stuItem, log })
   createElNotificationSuccess('审核成功')
   props.close()
 }

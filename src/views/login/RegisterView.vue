@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { createElNotificationSuccess } from '@/components/message'
 import { CommonService } from '@/services/CommonService'
-import { StudentService } from '@/services/StudentService'
 import type { Major, User } from '@/types'
 import { User as UserICO } from '@element-plus/icons-vue'
 
-const departs = await CommonService.listCollegesService()
+const { data } = CommonService.listCollegesService()
 
 const collegeIdR = ref('')
 const majorR = ref<Major>()
@@ -13,7 +12,7 @@ const majorsR = ref<Major[]>([])
 const userR = ref<User>({ account: '', mobile: '', name: '' })
 
 const selectCollegeF = (collid: string) => {
-  const r = departs.find(d => d.college.id === collid)
+  const r = data.value!.find(d => d.college.id === collid)
   majorsR.value = r?.majors ?? []
 }
 
@@ -27,7 +26,6 @@ const submitC = computed(
     userR.value.mobile.length === 11
 )
 
-const router = useRouter()
 const submitF = async () => {
   const account = userR.value.account
   const mobile = userR.value.mobile
@@ -45,7 +43,7 @@ const submitF = async () => {
     throw '专业错误'
   }
 
-  await StudentService.registerService(userR.value)
+  await CommonService.registerService(userR.value)
   createElNotificationSuccess('注册成功')
   CommonService.loginService({ account: userR.value.account, password: userR.value.account })
 }
@@ -63,7 +61,7 @@ const submitF = async () => {
             size="large"
             style="width: 200px; margin-right: 10px">
             <el-option
-              v-for="(depart, index) of departs"
+              v-for="(depart, index) of data"
               :key="index"
               :label="depart.college.name"
               :value="depart.college.id" />

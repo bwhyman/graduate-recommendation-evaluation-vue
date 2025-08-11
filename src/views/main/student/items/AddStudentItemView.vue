@@ -1,32 +1,30 @@
 <script setup lang="ts">
 import { StudentService } from '@/services/StudentService'
-import type { Item, StudentItemResp } from '@/types'
+import type { Item } from '@/types'
 import { Plus } from '@element-plus/icons-vue'
-import type { ShallowRef } from 'vue'
 import AddForm from './AddForm.vue'
 import ItemNode from './ItemNode.vue'
 
 const dialogVisible = ref(false)
 const rootItemId = useRoute().params.itemid as string
 
-let studentItemsR: ShallowRef<StudentItemResp[]>
+const activeFetchR = ref(false)
 
+const { data: studentItemsR, suspense: stuItemSusp } =
+  StudentService.listStudentItemsService(rootItemId)
+const { data: rootItemR, suspense: itemsSusp } = StudentService.listItemsService(rootItemId)
 const selectItemR = ref<Item>({})
 const limitItemR = ref<Item>({})
 const activeAddForm = ref(false)
 const activeMaxItemR = ref(false)
 
+await Promise.all([stuItemSusp(), itemsSusp()])
+
 // 第一级及以下
-let rootItemR: ShallowRef<Item>
-const activeF = async () => {
-  const result = await Promise.all([
-    StudentService.listStudentItemsService(rootItemId),
-    StudentService.listItemsService(rootItemId)
-  ])
-  studentItemsR = result[0]
-  rootItemR = result[1]
+const activeF = () => {
   dialogVisible.value = true
   activeMaxItemR.value = false
+  activeFetchR.value = true
 }
 //
 
@@ -47,7 +45,7 @@ const selectItemCallback = (item: Item) => {
     }
     return null
   }
-  const nodePath = findPathToNode(rootItem.items!, item.id!) ?? []
+  const nodePath = findPathToNode(rootItem?.items ?? [], item.id!) ?? []
 
   // 查找每个路径的全部叶子
   function findLeafs(item: Item[], leafItems: Item[] = []) {
@@ -68,7 +66,7 @@ const selectItemCallback = (item: Item) => {
 
   for (const node of nodeMap) {
     for (const sitem of node[1]) {
-      const x = studentItemsR.value.filter(stu => stu.itemId === sitem.id)
+      const x = studentItemsR.value!.filter(stu => stu.itemId === sitem.id)
       if (node[0].maxItems && x.length >= node[0]?.maxItems) {
         limitItemR.value = node[0]
         activeMaxItemR.value = true
@@ -105,7 +103,7 @@ const addForm = defineAsyncComponent(() => import('./AddForm.vue'))
     </div>
 
     <el-form v-if="dialogVisible">
-      <ItemNode :items="rootItemR.items ?? []" :key="rootItemId" />
+      <ItemNode :items="rootItemR?.items ?? []" :key="rootItemId" />
     </el-form>
     <div v-if="activeMaxItemR">
       <el-tag type="danger" size="large">{{ limitItemR.name }}：已达到限项数！</el-tag>
@@ -116,7 +114,6 @@ const addForm = defineAsyncComponent(() => import('./AddForm.vue'))
 <style scoped>
 .title {
   margin-bottom: 10px;
-
   color: #409eff;
 }
 </style>

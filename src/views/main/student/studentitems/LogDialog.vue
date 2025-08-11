@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import type { StudentItemLog } from '@/types'
+import { StudentService } from '@/services/StudentService'
 
 const dialogVisible = ref(true)
-const props = defineProps<{ close: () => void; logs: StudentItemLog[] }>()
+const props = defineProps<{ close: () => void; stuItemId: string }>()
+
+const { data: logsR, suspense } = StudentService.listStudentItemLogsService(props.stuItemId)
+await suspense()
 const closeF = () => {
   dialogVisible.value = false
   props.close()
@@ -11,7 +14,7 @@ const closeF = () => {
 <template>
   <el-dialog v-model="dialogVisible" title="日志" @close="closeF">
     <div>
-      <p v-for="log of props.logs" :key="log.id">{{ log.comment }}( {{ log.createTime }})</p>
+      <p v-for="log of logsR" :key="log.id">{{ log.comment }}( {{ log.createTime }})</p>
     </div>
   </el-dialog>
 </template>

@@ -4,15 +4,24 @@ import router from '@/router'
 import { ADMIN, CATEGORY_ADMIN, COLLEGE_ADMIN, STUDENT } from '@/services/Const'
 import { useUserStore } from '@/stores/UserStore'
 import type { College, Major, Progress, ResultVO, User, UserInfo } from '@/types'
+import { useQuery } from '@tanstack/vue-query'
+
+const addPreUrl = (url: string) => `open/${url}`
+
 const userStore = useUserStore()
 export class CommonService {
-  static async listCollegesService() {
-    return await useGet<{ college: College; majors: Major[] }[]>('open/colleges')
+  static listCollegesService() {
+    const query = useGet<{ college: College; majors: Major[] }[]>(addPreUrl('colleges'))
+    return useQuery({ queryKey: ['colleges'], queryFn: () => query })
+  }
+
+  static async registerService(user: User) {
+    await usePost(addPreUrl('register'), user)
   }
 
   // login
   static loginService = async (user: User) => {
-    const resp = await axios.post<ResultVO<UserInfo>>('open/login', user)
+    const resp = await axios.post<ResultVO<UserInfo>>(addPreUrl('/login'), user)
     const us = resp.data.data
     const token = resp.headers.token
     const role = resp.headers.role

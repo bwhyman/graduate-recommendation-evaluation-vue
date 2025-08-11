@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { CollegeService } from '@/services/CollegeService'
 const catid = useRoute().params.catid as string
-const majorsR = await CollegeService.listMajorsService(catid)
+const { data: majorsR } = CollegeService.listMajorsService(catid)
 
 const selectMajorIdR = ref('')
 const router = useRouter()

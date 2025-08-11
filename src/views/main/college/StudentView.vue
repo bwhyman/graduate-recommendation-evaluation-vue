@@ -4,38 +4,28 @@ import { SCORE_STATUS_MAP } from '@/services/Const'
 import { getFinalScoreUtil } from '@/services/Utils'
 import type { StudentItemsStatusDO } from '@/types'
 import { PhoneFilled, Promotion } from '@element-plus/icons-vue'
-
-const studentsR = shallowRef<StudentItemsStatusDO[]>([])
 const route = useRoute()
+const activeRefechR = ref(false)
+const majorIdR = ref('')
 
-const sortedStudentStatuses = (status: StudentItemsStatusDO[]) => {
-  return status.sort((a, b) => {
-    const finalA = getFinalScoreUtil(a.score ?? 0, a.totalPoint ?? 0)
-    const finalB = getFinalScoreUtil(a.score ?? 0, a.totalPoint ?? 0)
-    return finalB - finalA // 降序
-  })
-}
-
-//
-const updateDataF = async () => {
-  const majorid = route.params.majorid as string
-  const result = await CollegeService.listStudentsStatusesService(majorid)
-
-  studentsR.value = sortedStudentStatuses(result.value)
-}
-
+const { data: studentsR } = CollegeService.listStudentsStatusesService(majorIdR, activeRefechR)
 watch(
-  () => route.params,
-  async () => {
-    updateDataF()
+  () => route.params.majorid,
+  () => {
+    const majorid = route.params.majorid as string
+    majorIdR.value = majorid
+    activeRefechR.value = true
   },
   { immediate: true }
 )
+
 //
 const studentStatusR = ref<StudentItemsStatusDO>({})
 const activeR = ref(false)
-const closeF = () => (activeR.value = false)
-const reviewF = async (student: StudentItemsStatusDO) => {
+const closeF = () => {
+  activeR.value = false
+}
+const reviewF = (student: StudentItemsStatusDO) => {
   studentStatusR.value = student
   activeR.value = true
 }
@@ -120,5 +110,9 @@ const reviewdialog = defineAsyncComponent(() => import('./reviews/ReviewStudentD
       </el-table>
     </el-col>
   </el-row>
-  <reviewdialog v-if="activeR" :studentstatus="studentStatusR" :close="closeF" />
+  <reviewdialog
+    v-if="activeR"
+    :studentstatus="studentStatusR"
+    :close="closeF"
+    :majorid="majorIdR" />
 </template>

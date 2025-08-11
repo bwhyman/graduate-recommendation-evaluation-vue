@@ -3,18 +3,20 @@ import { createElNotificationSuccess } from '@/components/message'
 import { CollegeService } from '@/services/CollegeService'
 import type { RegisterUserDTO } from '@/types'
 import { User as UserICO } from '@element-plus/icons-vue'
-//const categoriesR = await CollegeService.listCategoryService()
 
-const result = await CollegeService.listCategoryAdminsService()
+const { data: result, suspense } = CollegeService.listCategoryAdminsService()
 
-const categoriesR = shallowRef(result.value.map(res => res.category))
+await suspense()
+const categoriesR = shallowRef((result.value ?? []).map(res => res.category))
 
 const userR = ref<RegisterUserDTO>({})
 const catidsR = ref<string[]>([])
 
+const { mutateAsync } = CollegeService.addAdminService()
+
 const submitF = async () => {
   userR.value.catIds = catidsR.value
-  await CollegeService.addAdminService(userR.value)
+  await mutateAsync(userR.value)
   createElNotificationSuccess('审核人添加成功')
   userR.value = {}
   catidsR.value = []

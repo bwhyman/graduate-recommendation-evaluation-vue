@@ -21,6 +21,9 @@ const widthC = computed(() => {
   return wWidth.value < 768 ? '80%' : '50%'
 })
 
+//
+const { mutateAsync } = CollegeService.addItemService(props.parentItem!.catId!)
+
 const submitF = async () => {
   const item: Item = {
     name: itemR.value.name,
@@ -34,9 +37,8 @@ const submitF = async () => {
   if (!topItemR.value) {
     item.parentId = props.parentItem.id
   }
-  await CollegeService.addItemService(item.catId!, item)
-
-  createElNotificationSuccess('添加成功')
+  await mutateAsync(item)
+  createElNotificationSuccess('项添加成功')
   render(null, document.body)
   itemR.value = {}
 }

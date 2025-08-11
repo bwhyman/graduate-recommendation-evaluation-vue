@@ -5,12 +5,14 @@ import { StudentService } from '@/services/StudentService'
 import { getFinalScoreUtil, getStatusUtil } from '@/services/Utils'
 import { Ship } from '@element-plus/icons-vue'
 
-const statusR = await StudentService.getStudentItemStatusesService()
 const userInfo = CommonService.getUserInfoService()
-
+const { data: statusR, suspense } = StudentService.getStudentItemStatusesService()
+await suspense()
 const colspan = 3
 
-const finalScore = getFinalScoreUtil(statusR.value?.score ?? 0, statusR.value?.totalPoint ?? 0)
+const finalScore = computed(() =>
+  getFinalScoreUtil(statusR.value?.score ?? 0, statusR.value?.totalPoint ?? 0)
+)
 </script>
 <template>
   <el-row class="my-row">
@@ -28,7 +30,7 @@ const finalScore = getFinalScoreUtil(statusR.value?.score ?? 0, statusR.value?.t
           <el-col :span="12">
             <el-tag
               size="large"
-              :type="SCORE_STATUS_MAP.get(statusR.verified ?? 0)?.color"
+              :type="SCORE_STATUS_MAP.get(statusR?.verified ?? 0)?.color"
               class="info-tag">
               {{ statusR?.score }}
             </el-tag>
@@ -40,7 +42,7 @@ const finalScore = getFinalScoreUtil(statusR.value?.score ?? 0, statusR.value?.t
           <el-col :span="12">
             <el-tag
               size="large"
-              :type="!statusR.verified || statusR.verified === 0 ? 'info' : 'success'"
+              :type="!statusR?.verified || statusR.verified === 0 ? 'info' : 'success'"
               class="info-tag">
               {{ statusR?.ranking }}
             </el-tag>

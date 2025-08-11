@@ -3,8 +3,9 @@ import { CollegeService } from '@/services/CollegeService'
 import type { Category } from '@/types'
 import ItemListView from './ItemListView.vue'
 
-const categoryMajorsR = await CollegeService.listcategoryMajorsService()
-const categories = categoryMajorsR.value.map(cm => cm.category)
+const { data: categoryMajorsR, suspense } = CollegeService.listcategoryMajorsService()
+await suspense()
+const categories = (categoryMajorsR.value ?? []).map(cm => cm.category)
 const categoryR = ref<Category>()
 </script>
 <template>

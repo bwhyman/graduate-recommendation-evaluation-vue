@@ -1,42 +1,46 @@
 <script setup lang="ts">
 import { CollegeService } from '@/services/CollegeService'
 import { CommonService } from '@/services/CommonService'
+import { querycachename } from '@/services/Const'
 import { getStatusUtil } from '@/services/Utils'
-import type {
-  ComfirmWeightedScoreReq,
-  Item,
-  StudentItemResp,
-  StudentItemsStatusDO,
-  WeightedScoreLog
-} from '@/types'
-import { EditPen, Odometer } from '@element-plus/icons-vue'
+import type { Item, StudentItemResp, StudentItemsStatusDO } from '@/types'
+import { Odometer } from '@element-plus/icons-vue'
+import { useQueryClient } from '@tanstack/vue-query'
 import ItemNode from './ItemNode.vue'
+import ReviewWeigthedScore from './ReviewWeigthedScore.vue'
 
 const dialogVisible = ref(true)
-const props = defineProps<{ studentstatus: StudentItemsStatusDO; close: () => void }>()
+const props = defineProps<{
+  majorid: string
+  studentstatus: StudentItemsStatusDO
+  close: () => void
+}>()
 const adminR = CommonService.getUserInfoService()
 
 const route = useRoute()
 const catid = route.params.catid as string
 
-const result = await Promise.all([
-  CollegeService.getStudentWeightedScoreService(props.studentstatus.userId!),
-  CollegeService.listStudentItemsService(props.studentstatus.userId!),
-  CollegeService.listCategoryItemsService(catid)
-])
+const { data: studentItemsAllR, suspense: su1 } = CollegeService.listStudentItemsService(
+  props.studentstatus.userId!
+)
+const { data: itemsR, suspense: su2 } = CollegeService.listCategoryItemsService(catid)
+const studentItemOfItemR = ref<StudentItemResp[]>([])
+await Promise.all([su1(), su2()])
 
-const weightScoreR = result[0]
-const studentItemsAllR = result[1]
-const itemsR = result[2]
+studentItemOfItemR.value = [...studentItemsAllR.value!]
 
+const qc = useQueryClient()
+//
 const closeF = async () => {
+  dialogVisible.value = false
+  //关闭，重新拉取专业学生全部状态
+  await qc.refetchQueries({
+    queryKey: [querycachename.college.majorstudentstatuses, props.majorid]
+  })
   props.close()
-  dialogVisible.value = true
 }
 
 //
-const studentItemOfItemR = ref<StudentItemResp[]>(studentItemsAllR.value)
-
 const getLevelItemId = (selectItem: Item) => {
   studentItemOfItemR.value = []
   const childItems: Item[] = []
@@ -50,30 +54,16 @@ const getLevelItemId = (selectItem: Item) => {
       childItems.push(item)
     }
   }
-
   rect(selectItem)
 
   for (const chItem of childItems) {
-    const stuitems = studentItemsAllR.value.filter(stuitem => stuitem.itemId === chItem.id)
+    const stuitems = studentItemsAllR.value!.filter(stuitem => stuitem.itemId === chItem.id)
     studentItemOfItemR.value.push(...stuitems)
   }
 }
 
-//
-
-const submitWeightedScoreF = async () => {
-  const comment = `${adminR.value?.name}认定加权成绩：${weightScoreR.value?.score}；排名：${weightScoreR.value?.ranking}`
-  const log: WeightedScoreLog = { studentId: props.studentstatus.userId!, comment: comment }
-  const req: ComfirmWeightedScoreReq = { weightedScore: weightScoreR.value, log: log }
-  const result = await CollegeService.updateStudentWeightedScoreService(
-    req,
-    props.studentstatus.userId!
-  )
-  weightScoreR.value = result.value
-}
-
 const listStudentItemsAllF = () => {
-  studentItemOfItemR.value = studentItemsAllR.value
+  studentItemOfItemR.value = [...studentItemsAllR.value!]
 }
 
 const downloadFileF = async (fileid: string, filename: string) => {
@@ -91,7 +81,7 @@ const confirmF = (stuItem: StudentItemResp) => {
 }
 const closeconfirmDialog = async () => {
   activeConfirmDialogR.value = false
-  studentItemOfItemR.value = studentItemsAllR.value
+  studentItemOfItemR.value = [...studentItemsAllR.value!]
 }
 </script>
 <template>
@@ -113,38 +103,7 @@ const closeconfirmDialog = async () => {
         </el-col>
       </el-row>
       <el-divider border-style="dashed" />
-      <el-row>
-        <el-col>
-          <span class="title">
-            加权成绩数据
-            <span v-if="weightScoreR?.verified" style="color: red; font-weight: bold">已认定</span>
-          </span>
-        </el-col>
-      </el-row>
-
-      <el-row align="middle">
-        <el-col :span="6">
-          <el-input-number
-            v-model="weightScoreR.score"
-            :max="100"
-            :min="0"
-            :precision="2"
-            size="large"
-            placeholder="加权成绩" />
-        </el-col>
-        <el-col :span="6">
-          <el-input-number
-            v-model="weightScoreR.ranking"
-            :min="0"
-            size="large"
-            placeholder="专业排名" />
-        </el-col>
-        <el-col :span="6">
-          <el-button type="primary" @click="submitWeightedScoreF">
-            <el-icon><EditPen /></el-icon>
-          </el-button>
-        </el-col>
-      </el-row>
+      <ReviewWeigthedScore :sid="props.studentstatus.userId!" />
       <el-divider border-style="dashed" />
       <el-row>
         <el-col>
@@ -157,8 +116,8 @@ const closeconfirmDialog = async () => {
       <el-row>
         <el-col>
           <ItemNode
-            :items="itemsR"
-            :studentitems="studentItemsAllR"
+            :items="itemsR!"
+            :studentitems="studentItemsAllR!"
             :get-root-id="getLevelItemId" />
         </el-col>
       </el-row>
@@ -175,75 +134,73 @@ const closeconfirmDialog = async () => {
       </el-row>
       <el-row>
         <el-col>
-          <el-col>
-            <el-table :data="studentItemOfItemR as StudentItemResp" style="width: 100%">
-              <el-table-column type="index" width="50" />
-              <el-table-column prop="itemName" label="指标点">
-                <template #default="scope">
-                  {{ (scope.row as StudentItemResp).itemName }}
-                </template>
-              </el-table-column>
-              <el-table-column label="内容">
-                <template #default="scope">
-                  {{ (scope.row as StudentItemResp).name }}
-                  <br />
-                  {{ (scope.row as StudentItemResp).comment }}
-                </template>
-              </el-table-column>
-              <el-table-column label="佐证">
-                <template #default="scope">
-                  <div v-for="file of (scope.row as StudentItemResp).files" :key="file.id">
-                    <el-tooltip
-                      class="box-item"
-                      effect="dark"
-                      :content="file.filename"
-                      placement="top"
-                      :hide-after="0">
-                      <el-tag size="large" style="margin-right: 8px" disable-transitions>
-                        <span
-                          class="tag-ellipsis"
-                          type="primary"
-                          size="large"
-                          @click="downloadFileF(file.id!, file.filename!)">
-                          {{ file.filename }}
-                        </span>
-                      </el-tag>
-                    </el-tooltip>
-                  </div>
-                  <br />
-                </template>
-              </el-table-column>
-              <el-table-column label="认定" width="120">
-                <template #default="scope">
-                  <div>
-                    <el-tag type="success" size="large">
-                      {{ (scope.row as StudentItemResp).point ?? 0 }}
+          <el-table :data="studentItemOfItemR as StudentItemResp" style="width: 100%">
+            <el-table-column type="index" width="50" />
+            <el-table-column prop="itemName" label="指标点">
+              <template #default="scope">
+                {{ (scope.row as StudentItemResp).itemName }}
+              </template>
+            </el-table-column>
+            <el-table-column label="内容">
+              <template #default="scope">
+                {{ (scope.row as StudentItemResp).name }}
+                <br />
+                {{ (scope.row as StudentItemResp).comment }}
+              </template>
+            </el-table-column>
+            <el-table-column label="佐证">
+              <template #default="scope">
+                <div v-for="file of (scope.row as StudentItemResp).files" :key="file.id">
+                  <el-tooltip
+                    class="box-item"
+                    effect="dark"
+                    :content="file.filename"
+                    placement="top"
+                    :hide-after="0">
+                    <el-tag size="large" style="margin-right: 8px" disable-transitions>
+                      <span
+                        class="tag-ellipsis"
+                        type="primary"
+                        size="large"
+                        @click="downloadFileF(file.id!, file.filename!)">
+                        {{ file.filename }}
+                      </span>
                     </el-tag>
-                    <span style="vertical-align: middle">
-                      / {{ (scope.row as StudentItemResp).maxPoints }}
-                    </span>
-                  </div>
-                </template>
-              </el-table-column>
-              <el-table-column label="状态" width="80">
-                <template #default="scope">
-                  <el-tag :type="getStatusUtil((scope.row as StudentItemResp).status ?? '')?.color">
-                    {{ getStatusUtil((scope.row as StudentItemResp).status ?? '')?.name }}
+                  </el-tooltip>
+                </div>
+                <br />
+              </template>
+            </el-table-column>
+            <el-table-column label="认定" width="120">
+              <template #default="scope">
+                <div>
+                  <el-tag type="success" size="large">
+                    {{ (scope.row as StudentItemResp).point ?? 0 }}
                   </el-tag>
-                </template>
-              </el-table-column>
-              <el-table-column label="操作" width="80">
-                <template #default="scope">
-                  <el-icon
-                    class="my-action-icon"
-                    color="#409EFF"
-                    @click="confirmF(scope.row as StudentItemResp)">
-                    <Odometer />
-                  </el-icon>
-                </template>
-              </el-table-column>
-            </el-table>
-          </el-col>
+                  <span style="vertical-align: middle">
+                    / {{ (scope.row as StudentItemResp).maxPoints }}
+                  </span>
+                </div>
+              </template>
+            </el-table-column>
+            <el-table-column label="状态" width="80">
+              <template #default="scope">
+                <el-tag :type="getStatusUtil((scope.row as StudentItemResp).status ?? '')?.color">
+                  {{ getStatusUtil((scope.row as StudentItemResp).status ?? '')?.name }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="80">
+              <template #default="scope">
+                <el-icon
+                  class="my-action-icon"
+                  color="#409EFF"
+                  @click="confirmF(scope.row as StudentItemResp)">
+                  <Odometer />
+                </el-icon>
+              </template>
+            </el-table-column>
+          </el-table>
         </el-col>
       </el-row>
     </div>

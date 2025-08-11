@@ -3,13 +3,14 @@ import { createElNotificationSuccess } from '@/components/message'
 import { CollegeService } from '@/services/CollegeService'
 import type { Category, Major } from '@/types'
 import { ArrowDown, ArrowUp, EditPen } from '@element-plus/icons-vue'
-const categoriesMajorsR = await CollegeService.listcategoryMajorsService()
+const { data: categoriesMajorsR, suspense } = CollegeService.listcategoryMajorsService()
+await suspense()
 const cats: Category[] = []
 watch(
   categoriesMajorsR,
   () => {
     cats.length = 0
-    categoriesMajorsR.value.forEach(cm => cm.category && cats.push(cm.category))
+    ;(categoriesMajorsR.value ?? []).forEach(cm => cm.category && cats.push(cm.category))
   },
   { immediate: true }
 )
@@ -22,8 +23,10 @@ const openAddF = () => {
   majorR.value = {}
 }
 
+const { mutateAsync } = CollegeService.addMajorService()
+
 const addMajorActiveF = async () => {
-  await CollegeService.addMajorService(majorR.value)
+  await mutateAsync(majorR.value)
   createElNotificationSuccess('专业添加成功')
   addMajorActiveR.value = false
   majorR.value = {}

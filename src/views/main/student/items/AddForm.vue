@@ -8,18 +8,18 @@ const props = defineProps<{ item: Item; close: () => void }>()
 const rootitemid = useRoute().params.itemid as string
 const studentItemR = ref<StudentItem>({})
 
+const { mutateAsync } = StudentService.addStudentItemService(rootitemid)
+
 const submitF = async () => {
   if (!studentItemR.value.name) {
     throw '必须添加标题'
   }
-
-  //
   studentItemR.value.rootItemId = rootitemid
   studentItemR.value.itemId = props.item.id
-  await StudentService.addStudentItemService(studentItemR.value)
-  props.close()
+  await mutateAsync(studentItemR.value)
   createElNotificationSuccess('指标项添加成功')
   studentItemR.value = {}
+  props.close()
 }
 const submitDisabledC = computed(() => !studentItemR.value.name)
 </script>

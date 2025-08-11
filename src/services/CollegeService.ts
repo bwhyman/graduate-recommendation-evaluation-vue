@@ -1,6 +1,4 @@
 import { useGet, usePost, usePut } from '@/axios'
-import { useCategoriesMajorsItemsStore } from '@/stores/CategoriesMajorsItemsStore'
-import { useStudentScoreitemsStore } from '@/stores/StudentScoreItemsStore'
 import type {
   Category,
   CategoryMajors,
@@ -15,82 +13,134 @@ import type {
   User,
   WeightedScore
 } from '@/types'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { CommonService } from './CommonService'
-import { ELLoading, StoreCache, StoreMapCache } from './Decorators'
-
+import { CATEGORY_ADMIN, COLLEGE_ADMIN, querycachename } from './Const'
+import { getFinalScoreUtil } from './Utils'
+//
 const addPreUrl = (url: string) => `college/${url}`
 
-const categoryMajorsStore = useCategoriesMajorsItemsStore()
-const studentItemsStore = useStudentScoreitemsStore()
-
 export class CollegeService {
-  static async listCategoryService() {
-    const result = await useGet<Category[]>(addPreUrl('categories'))
-    return shallowRef(result)
-  }
-
-  // 仅用于collegeadmin，修改
-  @StoreCache(categoryMajorsStore.categoryMajorsR)
-  static async listcategoryMajorsService() {
-    const result = await useGet<CategoryMajors[]>(addPreUrl('categories/majors'))
-    return shallowRef(result)
-  }
-  @StoreCache(categoryMajorsStore.categoryMajorsR, true)
-  static async addMajorService(major: Major) {
-    const result = await usePost(addPreUrl('majors'), major)
-    return shallowRef(result)
-  }
-
-  @StoreMapCache(categoryMajorsStore.catItemsMapR)
-  static async listCategoryItemsService(catid: string) {
-    const result = await useGet<Item[]>(addPreUrl(`categories/${catid}/items`))
-    return shallowRef(result)
-  }
-
-  @StoreMapCache(categoryMajorsStore.catItemsMapR, { replace: true, indexs: [0] })
-  static async addItemService(catId: string, item: Item) {
-    const result = await usePost<Item[]>(addPreUrl('items'), item)
-    return shallowRef(result)
-  }
-
-  @StoreMapCache(categoryMajorsStore.majorsMapR)
-  static async listMajorsService(catid: string) {
-    const result = await useGet<Major[]>(addPreUrl(`categories/${catid}/majors`))
-    return shallowRef(result)
-  }
-
-  @StoreMapCache(categoryMajorsStore.majorsMapR)
-  @ELLoading()
-  static async listStudentsStatusesService(majorid: string) {
-    const result = await useGet<StudentItemsStatusDO[]>(
-      addPreUrl(`majors/${majorid}/students/statuses`)
-    )
-    return shallowRef(result)
-  }
-
-  static async getStudentWeightedScoreService(sid: string) {
-    const result = await useGet<WeightedScore>(addPreUrl(`students/${sid}/weightedscore`))
-    return shallowRef(result)
-  }
-
-  static async updateStudentWeightedScoreService(req: ComfirmWeightedScoreReq, sid: string) {
-    const result = await usePost<WeightedScore>(addPreUrl(`students/${sid}/weightedscore`), req)
-    return shallowRef(result)
-  }
-
-  @StoreMapCache(studentItemsStore.studentItemsMapR)
-  static async listStudentItemsService(sid: string) {
-    const result = await useGet<StudentItemResp[]>(addPreUrl(`students/${sid}/studentitems`))
-    return shallowRef(result)
-  }
-
-  @StoreMapCache(studentItemsStore.studentItemsMapR, { replace: true, indexs: [0] })
-  static async updateStudentItemSercice(sid: string, stuItem: StudentItem, log: StudentItemLog) {
-    const result = await usePost<StudentItemResp[]>(addPreUrl(`students/${sid}/studentitems`), {
-      studentItem: stuItem,
-      log
+  //
+  static listCategoryService(role: Ref<string>) {
+    return useQuery({
+      queryKey: [querycachename.college.categories],
+      queryFn: () => useGet<Category[]>(addPreUrl('categories')),
+      enabled: role.value === CATEGORY_ADMIN || role.value === COLLEGE_ADMIN
     })
-    return shallowRef(result)
+  }
+
+  // 仅用于collegeadmin，添加专业
+  static listcategoryMajorsService() {
+    return useQuery({
+      queryKey: [querycachename.college.categoriesmajors],
+      queryFn: () => useGet<CategoryMajors[]>(addPreUrl('categories/majors'))
+    })
+  }
+
+  //
+  static addMajorService() {
+    const qc = useQueryClient()
+    return useMutation({
+      mutationFn: (major: Major) => usePost(addPreUrl('majors'), major),
+      onSuccess: () =>
+        qc.refetchQueries({
+          queryKey: [querycachename.college.categoriesmajors]
+        })
+    })
+  }
+
+  //
+  static listCategoryItemsService(catid: string) {
+    return useQuery({
+      queryKey: [querycachename.college.categoryitems, catid],
+      queryFn: () => useGet<Item[]>(addPreUrl(`categories/${catid}/items`))
+    })
+  }
+
+  //
+  static addItemService(catid: string) {
+    const qc = useQueryClient()
+    return useMutation({
+      mutationFn: (item: Item) => usePost<Item[]>(addPreUrl('items'), item),
+      onSuccess: () =>
+        qc.refetchQueries({ queryKey: [querycachename.college.categoryitems, catid] })
+    })
+  }
+
+  // 基于类别，加载全专业
+  static listMajorsService(catid: string) {
+    return useQuery({
+      queryKey: [querycachename.college.majors, catid],
+      queryFn: () => useGet<Major[]>(addPreUrl(`categories/${catid}/majors`))
+    })
+  }
+
+  static listStudentsStatusesService(majorid: Ref<string>, activeRefechR: Ref<boolean>) {
+    return useQuery({
+      queryKey: [querycachename.college.majorstudentstatuses, majorid],
+      queryFn: () =>
+        useGet<StudentItemsStatusDO[]>(addPreUrl(`majors/${majorid.value}/students/statuses`)),
+      enabled: activeRefechR,
+      select: data =>
+        data.sort((a, b) => {
+          const finalA = getFinalScoreUtil(a.score ?? 0, a.totalPoint ?? 0)
+          const finalB = getFinalScoreUtil(b.score ?? 0, b.totalPoint ?? 0)
+          return finalB - finalA // 降序
+        })
+    })
+  }
+
+  static getStudentWeightedScoreService(sid: string) {
+    return useQuery({
+      queryKey: [querycachename.college.studentweightedscores, sid],
+      queryFn: () => useGet<WeightedScore>(addPreUrl(`students/${sid}/weightedscore`))
+    })
+  }
+
+  static updateStudentWeightedScoreService(sid: string) {
+    const qc = useQueryClient()
+    return useMutation({
+      mutationKey: [querycachename.college.studentweightedscores, sid],
+      mutationFn: ({ sid, req }: { sid: string; req: ComfirmWeightedScoreReq }) =>
+        usePost<WeightedScore>(addPreUrl(`students/${sid}/weightedscore`), req),
+      onSuccess: () =>
+        qc.refetchQueries({ queryKey: [querycachename.college.studentweightedscores, sid] })
+    })
+  }
+
+  //
+  static listStudentItemsService(sid: string) {
+    return useQuery({
+      queryKey: [querycachename.college.studentitems, sid],
+      queryFn: () => useGet<StudentItemResp[]>(addPreUrl(`students/${sid}/studentitems`))
+    })
+  }
+
+  //
+  static updateStudentItemSercice(sid: string) {
+    const qc = useQueryClient()
+    return useMutation({
+      mutationKey: [querycachename.college.studentitems, sid],
+      mutationFn: ({
+        sid,
+        stuItem,
+        log
+      }: {
+        sid: string
+        stuItem: StudentItem
+        log: StudentItemLog
+      }) => {
+        return usePost<StudentItemResp[]>(addPreUrl(`students/${sid}/studentitems`), {
+          studentItem: stuItem,
+          log
+        })
+      },
+      onSuccess: () =>
+        qc.refetchQueries({
+          queryKey: [querycachename.college.studentitems, sid]
+        })
+    })
   }
 
   static async downloadFileService(sfile: string, fileName: string) {
@@ -98,18 +148,25 @@ export class CollegeService {
   }
 
   //
-  static async addAdminService(user: RegisterUserDTO) {
-    const result = await usePost(addPreUrl('users'), user)
+  static addAdminService() {
+    const qc = useQueryClient()
+    return useMutation({
+      mutationFn: (user: RegisterUserDTO) => usePost(addPreUrl('users'), user),
+      onSuccess: () => qc.refetchQueries({ queryKey: [querycachename.college.categoryadmins] })
+    })
   }
 
-  static async listCategoryAdminsService() {
-    const result = await useGet<
-      {
-        category?: Category
-        users?: User[]
-      }[]
-    >(addPreUrl('categories/users'))
-    return shallowRef(result)
+  static listCategoryAdminsService() {
+    return useQuery({
+      queryKey: [querycachename.college.categoryadmins],
+      queryFn: () =>
+        useGet<
+          {
+            category?: Category
+            users?: User[]
+          }[]
+        >(addPreUrl('categories/users'))
+    })
   }
 
   static async updatePasswordService(account: string) {
