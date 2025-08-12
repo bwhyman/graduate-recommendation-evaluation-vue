@@ -7,24 +7,22 @@ import ItemNode from './ItemNode.vue'
 
 const dialogVisible = ref(false)
 const rootItemId = useRoute().params.itemid as string
-
-const activeFetchR = ref(false)
+const fetchR = ref(false)
 
 const { data: studentItemsR, suspense: stuItemSusp } =
   StudentService.listStudentItemsService(rootItemId)
-const { data: rootItemR, suspense: itemsSusp } = StudentService.listItemsService(rootItemId)
+const { data: rootItemR, suspense: itemsSusp } = StudentService.listItemsService(rootItemId, fetchR)
 const selectItemR = ref<Item>({})
 const limitItemR = ref<Item>({})
 const activeAddForm = ref(false)
 const activeMaxItemR = ref(false)
 
-await Promise.all([stuItemSusp(), itemsSusp()])
-
 // 第一级及以下
-const activeF = () => {
+const activeF = async () => {
+  fetchR.value = true
+  await Promise.all([stuItemSusp(), itemsSusp()])
   dialogVisible.value = true
   activeMaxItemR.value = false
-  activeFetchR.value = true
 }
 //
 
@@ -82,6 +80,7 @@ const closeF = () => {
   activeAddForm.value = false
   dialogVisible.value = false
   activeMaxItemR.value = false
+  fetchR.value = false
 }
 
 const addForm = defineAsyncComponent(() => import('./AddForm.vue'))

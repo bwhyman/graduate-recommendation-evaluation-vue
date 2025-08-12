@@ -5,7 +5,8 @@ import { AddItemDialog } from './CreateItemDialog'
 import ItemNode from './ItemNode.vue'
 
 const props = defineProps<{ category: Category }>()
-const { data: itemsR } = CollegeService.listCategoryItemsService(props.category.id ?? '')
+const { data: itemsR, suspense } = CollegeService.listCategoryItemsService(props.category.id ?? '')
+await suspense()
 const insinstance = getCurrentInstance()
 const getTopItems = () => (itemsR.value ?? []).filter(i => !i.parentId)
 </script>

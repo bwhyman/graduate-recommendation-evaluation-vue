@@ -18,20 +18,18 @@ const props = defineProps<Props>()
 props.studentitem && (studentItemR.value = props.studentitem)
 
 //
-const { mutate, isSuccess } = StudentService.updateStudentItemService(props.rootitemid)
+const { mutateAsync } = StudentService.updateStudentItemService(props.rootitemid)
 
-const submitF = () => {
+const submitF = async () => {
   if (!studentItemR.value.name) {
     throw '必须添加标题'
   }
   if (!props.studentitem || !props.studentitem.id) {
     throw '读取错误'
   }
-  mutate({ studentItemId: studentItemR.value.id!, stuItem: studentItemR.value })
-  watch(isSuccess, () => {
-    createElNotificationSuccess('指标项更新成功')
-    props.close()
-  })
+  await mutateAsync({ studentItemId: studentItemR.value.id!, stuItem: studentItemR.value })
+  createElNotificationSuccess('指标项更新成功')
+  props.close()
 }
 const submitDisabledC = computed(() => !studentItemR.value.name)
 

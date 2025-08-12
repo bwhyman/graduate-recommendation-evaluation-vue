@@ -1,4 +1,5 @@
 import { useGet, usePost, usePut } from '@/axios'
+import { createElLoading } from '@/components/loading'
 import type {
   Category,
   CategoryMajors,
@@ -54,7 +55,7 @@ export class CollegeService {
   static listCategoryItemsService(catid: string) {
     return useQuery({
       queryKey: [querycachename.college.categoryitems, catid],
-      queryFn: () => useGet<Item[]>(addPreUrl(`categories/${catid}/items`))
+      queryFn: () => createElLoading(useGet<Item[]>(addPreUrl(`categories/${catid}/items`)))
     })
   }
 
@@ -76,12 +77,14 @@ export class CollegeService {
     })
   }
 
-  static listStudentsStatusesService(majorid: Ref<string>, activeRefechR: Ref<boolean>) {
+  static listStudentsStatusesService(majorid: Ref<string>) {
     return useQuery({
       queryKey: [querycachename.college.majorstudentstatuses, majorid],
       queryFn: () =>
-        useGet<StudentItemsStatusDO[]>(addPreUrl(`majors/${majorid.value}/students/statuses`)),
-      enabled: activeRefechR,
+        createElLoading(
+          useGet<StudentItemsStatusDO[]>(addPreUrl(`majors/${majorid.value}/students/statuses`))
+        ),
+      enabled: computed(() => !!majorid.value),
       select: data =>
         data.sort((a, b) => {
           const finalA = getFinalScoreUtil(a.score ?? 0, a.totalPoint ?? 0)
@@ -113,7 +116,8 @@ export class CollegeService {
   static listStudentItemsService(sid: string) {
     return useQuery({
       queryKey: [querycachename.college.studentitems, sid],
-      queryFn: () => useGet<StudentItemResp[]>(addPreUrl(`students/${sid}/studentitems`))
+      queryFn: () =>
+        createElLoading(useGet<StudentItemResp[]>(addPreUrl(`students/${sid}/studentitems`)))
     })
   }
 

@@ -5,16 +5,14 @@ import { getFinalScoreUtil } from '@/services/Utils'
 import type { StudentItemsStatusDO } from '@/types'
 import { PhoneFilled, Promotion } from '@element-plus/icons-vue'
 const route = useRoute()
-const activeRefechR = ref(false)
 const majorIdR = ref('')
 
-const { data: studentsR } = CollegeService.listStudentsStatusesService(majorIdR, activeRefechR)
+const { data: studentsR } = CollegeService.listStudentsStatusesService(majorIdR)
 watch(
   () => route.params.majorid,
   () => {
     const majorid = route.params.majorid as string
-    majorIdR.value = majorid
-    activeRefechR.value = true
+    majorid && (majorIdR.value = majorid)
   },
   { immediate: true }
 )

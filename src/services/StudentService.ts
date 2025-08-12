@@ -1,4 +1,5 @@
 import axios, { useDelete, useGet, usePatch, usePost } from '@/axios'
+import { createElLoading } from '@/components/loading'
 import { createProgressNotification } from '@/components/progress'
 import type {
   Item,
@@ -26,10 +27,11 @@ export class StudentService {
     })
   }
 
-  static listItemsService(itemid: string) {
+  static listItemsService(itemid: string, fetch: Ref<boolean>) {
     return useQuery({
       queryKey: [querycachename.student.items, itemid],
-      queryFn: () => useGet<Item>(addPreUrl(`items/${itemid}`))
+      queryFn: () => createElLoading(useGet<Item>(addPreUrl(`items/${itemid}`))),
+      enabled: fetch
     })
   }
 
