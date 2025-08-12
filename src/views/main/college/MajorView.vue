@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { CollegeService } from '@/services/CollegeService'
+//
 const catid = useRoute().params.catid as string
-const { data: majorsR } = CollegeService.listMajorsService(catid)
-
+const catidR = ref(catid)
 const selectMajorIdR = ref('')
 const router = useRouter()
 const route = useRoute()
@@ -12,12 +12,14 @@ const selectMajorF = async () => {
     router.push(`/college/categories/${catid}/marjors/${selectMajorIdR.value}`)
   }
 }
-
+const { data: majorsR } = CollegeService.listMajorsService(catidR)
 watch(
   () => route.params,
   () => {
     const majorid = route.params.majorid as string
-    selectMajorIdR.value = majorid
+    const catid = route.params.catid as string
+    majorid && (selectMajorIdR.value = majorid)
+    catid && (catidR.value = catid)
   },
   { immediate: true }
 )

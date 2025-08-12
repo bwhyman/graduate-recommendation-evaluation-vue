@@ -70,10 +70,10 @@ export class CollegeService {
   }
 
   // 基于类别，加载全专业
-  static listMajorsService(catid: string) {
+  static listMajorsService(catidR: Ref<string>) {
     return useQuery({
-      queryKey: [querycachename.college.majors, catid],
-      queryFn: () => useGet<Major[]>(addPreUrl(`categories/${catid}/majors`))
+      queryKey: [querycachename.college.majors, catidR],
+      queryFn: () => useGet<Major[]>(addPreUrl(`categories/${catidR.value}/majors`))
     })
   }
 
