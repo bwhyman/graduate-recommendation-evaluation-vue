@@ -22,7 +22,7 @@ export class CommonService {
 
   // login
   static loginService = async (user: User) => {
-    const resp = await axios.post<ResultVO<UserInfo>>(addPreUrl('/login'), user)
+    const resp = await axios.post<ResultVO<UserInfo>>(addPreUrl('login'), user)
     const us = resp.data.data
     const token = resp.headers.token
     const role = resp.headers.role
