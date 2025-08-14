@@ -10,8 +10,12 @@ const menusMapR = ref(new Map<string, string>())
 const role = CommonService.getRoleService()
 
 const roleR = ref(role ?? '')
-const { data: level1Items, suspense: stuSusp } = StudentService.listTopLevelItemsService(roleR)
-const { data: categoriesR, suspense: collSusp } = CollegeService.listCategoryService(roleR)
+const { data: level1Items, suspense: stuSusp } = StudentService.listTopLevelItemsService(
+  role === STUDENT
+)
+const { data: categoriesR, suspense: collSusp } = CollegeService.listCategoryService(
+  role === COLLEGE_ADMIN || role === CATEGORY_ADMIN
+)
 
 if (role === STUDENT) {
   menusMapR.value.set('中心', '/student')

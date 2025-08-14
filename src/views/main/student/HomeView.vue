@@ -6,12 +6,13 @@ import { getFinalScoreUtil, getStatusUtil } from '@/services/Utils'
 import { Ship } from '@element-plus/icons-vue'
 
 const userInfo = CommonService.getUserInfoService()
+const weighting = CommonService.getCategoryWeightingService()
 const { data: statusR, suspense } = StudentService.getStudentItemStatusesService()
 await suspense()
 const colspan = 3
 
 const finalScore = computed(() =>
-  getFinalScoreUtil(statusR.value?.score ?? 0, statusR.value?.totalPoint ?? 0)
+  getFinalScoreUtil(statusR.value?.score ?? 0, statusR.value?.totalPoint ?? 0, weighting!)
 )
 </script>
 <template>
@@ -19,7 +20,8 @@ const finalScore = computed(() =>
     <el-col>
       <p class="title">基本信息数据</p>
       <div>
-        {{ userInfo?.name }} - {{ userInfo?.collName }} - {{ userInfo?.catNames?.join(';') }} -
+        {{ userInfo?.name }} - {{ userInfo?.collName }} -
+        <template v-for="cat of userInfo?.categories" :key="cat.id">{{ cat.name }} -</template>
         {{ userInfo?.majorName }}
       </div>
 
@@ -116,8 +118,10 @@ const finalScore = computed(() =>
             <el-col :span="12">
               <span>
                 <el-tag size="large" type="success" class="info-tag">{{ finalScore }}</el-tag>
-                = 加权成绩({{ statusR?.score }} ) * 85% + 全面发展成绩({{ statusR?.totalPoint }}
-                ) * 15%
+                = 加权成绩({{ statusR?.score }} ) * {{ weighting?.score }}% + 全面发展成绩({{
+                  statusR?.totalPoint
+                }}
+                ) * {{ weighting?.compositeScore }}%
               </span>
             </el-col>
           </el-row>

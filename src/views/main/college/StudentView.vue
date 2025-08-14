@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { CollegeService } from '@/services/CollegeService'
+import { CommonService } from '@/services/CommonService'
 import { SCORE_STATUS_MAP } from '@/services/Const'
 import { getFinalScoreUtil } from '@/services/Utils'
 import type { StudentItemsStatusDO } from '@/types'
 import { PhoneFilled, Promotion } from '@element-plus/icons-vue'
 const route = useRoute()
 const majorIdR = ref('')
-
-const { data: studentsR } = CollegeService.listStudentsStatusesService(majorIdR)
+const catid = route.params.catid as string
+const weighting = CommonService.getCategoryWeightingService(catid)
+const { data: studentsR } = CollegeService.listStudentsStatusesService(majorIdR, weighting!)
 watch(
   () => route.params.majorid,
   () => {
@@ -48,7 +50,9 @@ const reviewdialog = defineAsyncComponent(() => import('./reviews/ReviewStudentD
 
         <el-table-column label="待审核项数">
           <template #default="scope">
-            {{ (scope.row as StudentItemsStatusDO).pendingReviewCount }}
+            <el-tag type="danger" size="large">
+              {{ (scope.row as StudentItemsStatusDO).pendingReviewCount }}
+            </el-tag>
           </template>
         </el-table-column>
         <el-table-column label="项数">
@@ -66,6 +70,7 @@ const reviewdialog = defineAsyncComponent(() => import('./reviews/ReviewStudentD
         <el-table-column label="加权成绩">
           <template #default="scope">
             <el-tag
+              size="large"
               :type="
                 SCORE_STATUS_MAP.get((scope.row as StudentItemsStatusDO).verified ?? 0)?.color
               ">
@@ -76,6 +81,7 @@ const reviewdialog = defineAsyncComponent(() => import('./reviews/ReviewStudentD
         <el-table-column label="已认定成绩">
           <template #default="scope">
             <el-tag
+              size="large"
               :type="
                 SCORE_STATUS_MAP.get((scope.row as StudentItemsStatusDO).verified ?? 0)?.color
               ">
@@ -86,13 +92,15 @@ const reviewdialog = defineAsyncComponent(() => import('./reviews/ReviewStudentD
         <el-table-column label="最终成绩">
           <template #default="scope">
             <el-tag
+              size="large"
               :type="
                 SCORE_STATUS_MAP.get((scope.row as StudentItemsStatusDO).verified ?? 0)?.color
               ">
               {{
                 getFinalScoreUtil(
                   (scope.row as StudentItemsStatusDO).score ?? 0,
-                  (scope.row as StudentItemsStatusDO).totalPoint ?? 0
+                  (scope.row as StudentItemsStatusDO).totalPoint ?? 0,
+                  weighting!
                 )
               }}
             </el-tag>

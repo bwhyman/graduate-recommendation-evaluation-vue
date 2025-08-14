@@ -2,6 +2,7 @@ import { useGet, usePost, usePut } from '@/axios'
 import { createElLoading } from '@/components/loading'
 import type {
   Category,
+  CategoryInfo,
   CategoryMajors,
   ComfirmWeightedScoreReq,
   Item,
@@ -16,18 +17,18 @@ import type {
 } from '@/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { CommonService } from './CommonService'
-import { CATEGORY_ADMIN, COLLEGE_ADMIN, querycachename } from './Const'
+import { querycachename } from './Const'
 import { getFinalScoreUtil } from './Utils'
 //
 const addPreUrl = (url: string) => `college/${url}`
 
 export class CollegeService {
   //
-  static listCategoryService(role: Ref<string>) {
+  static listCategoryService(enabled: boolean) {
     return useQuery({
       queryKey: [querycachename.college.categories],
       queryFn: () => useGet<Category[]>(addPreUrl('categories')),
-      enabled: role.value === CATEGORY_ADMIN || role.value === COLLEGE_ADMIN
+      enabled: enabled
     })
   }
 
@@ -77,7 +78,7 @@ export class CollegeService {
     })
   }
 
-  static listStudentsStatusesService(majorid: Ref<string>) {
+  static listStudentsStatusesService(majorid: Ref<string>, weighting: CategoryInfo) {
     return useQuery({
       queryKey: [querycachename.college.majorstudentstatuses, majorid],
       queryFn: () =>
@@ -87,8 +88,8 @@ export class CollegeService {
       enabled: computed(() => !!majorid.value),
       select: data =>
         data.sort((a, b) => {
-          const finalA = getFinalScoreUtil(a.score ?? 0, a.totalPoint ?? 0)
-          const finalB = getFinalScoreUtil(b.score ?? 0, b.totalPoint ?? 0)
+          const finalA = getFinalScoreUtil(a.score ?? 0, a.totalPoint ?? 0, weighting)
+          const finalB = getFinalScoreUtil(b.score ?? 0, b.totalPoint ?? 0, weighting)
           return finalB - finalA // 降序
         })
     })

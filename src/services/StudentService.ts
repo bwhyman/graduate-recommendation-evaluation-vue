@@ -13,17 +13,17 @@ import type {
 } from '@/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { CommonService } from './CommonService'
-import { querycachename, STUDENT } from './Const'
+import { querycachename } from './Const'
 //
 const addPreUrl = (url: string) => `student/${url}`
 
 export class StudentService {
   //
-  static listTopLevelItemsService(role: Ref<string>) {
+  static listTopLevelItemsService(enabled: boolean) {
     return useQuery({
       queryKey: ['topitems'],
       queryFn: () => useGet<Item[]>(addPreUrl('topitems')),
-      enabled: role.value === STUDENT
+      enabled: enabled
     })
   }
 

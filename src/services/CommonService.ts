@@ -99,4 +99,11 @@ export class CommonService {
 
     return resp
   }
+
+  static getCategoryWeightingService = (catid?: string) => {
+    if (!catid) {
+      return userStore.userS.value?.categories && (userStore.userS.value?.categories[0] ?? {})
+    }
+    return userStore.userS.value?.categories?.find(w => w.id === catid)
+  }
 }

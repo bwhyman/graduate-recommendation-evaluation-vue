@@ -8,7 +8,9 @@ const userInfoR = CommonService.getUserInfoService()
     <el-col>
       <h3>{{ userInfoR?.name }}</h3>
       <h3>{{ userInfoR?.collName }}</h3>
-      <h3>{{ userInfoR?.catNames }}</h3>
+      <h3>
+        <template v-for="cat of userInfoR?.categories" :key="cat.id">{{ cat.name }};</template>
+      </h3>
       <h3>{{ userInfoR?.majorName }}</h3>
     </el-col>
   </el-row>

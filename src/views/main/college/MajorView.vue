@@ -7,9 +7,9 @@ const selectMajorIdR = ref('')
 const router = useRouter()
 const route = useRoute()
 //
-const selectMajorF = async () => {
+const selectMajorF = () => {
   if (selectMajorIdR.value) {
-    router.push(`/college/categories/${catid}/marjors/${selectMajorIdR.value}`)
+    router.push(`/college/categories/${catidR.value}/marjors/${selectMajorIdR.value}`)
   }
 }
 const { data: majorsR } = CollegeService.listMajorsService(catidR)

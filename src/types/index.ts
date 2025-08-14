@@ -20,8 +20,15 @@ export interface RegisterUserDTO {
 export interface UserInfo {
   name: string
   collName?: string
-  catNames?: string[]
   majorName?: string
+  categories?: CategoryInfo[]
+}
+
+export interface CategoryInfo {
+  id: string
+  name: string
+  score: number
+  compositeScore: number
 }
 
 export interface College {
@@ -34,7 +41,6 @@ export interface Category {
   name?: string
   collId?: string
   comment?: string
-  weighting?: { score: number; compositeScore: number }
   dueTime: Date
 }
 

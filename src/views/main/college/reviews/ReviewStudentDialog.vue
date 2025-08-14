@@ -4,7 +4,7 @@ import { CommonService } from '@/services/CommonService'
 import { querycachename } from '@/services/Const'
 import { getStatusUtil } from '@/services/Utils'
 import type { Item, StudentItemResp, StudentItemsStatusDO } from '@/types'
-import { Odometer } from '@element-plus/icons-vue'
+import { Odometer, PhoneFilled } from '@element-plus/icons-vue'
 import { useQueryClient } from '@tanstack/vue-query'
 import ItemNode from './ItemNode.vue'
 import ReviewWeigthedScore from './ReviewWeigthedScore.vue'
@@ -99,7 +99,14 @@ const closeconfirmDialog = async () => {
       </el-row>
       <el-row>
         <el-col>
-          <h3>学生：{{ props.studentstatus.userName }}</h3>
+          <h3>
+            学生：{{ props.studentstatus.userName }} -
+            <el-icon
+              style="cursor: pointer; color: #409eff; font-size: 18px; vertical-align: middle"
+              :title="props.studentstatus.mobile">
+              <PhoneFilled />
+            </el-icon>
+          </h3>
         </el-col>
       </el-row>
       <el-divider border-style="dashed" />
